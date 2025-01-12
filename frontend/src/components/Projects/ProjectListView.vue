@@ -13,6 +13,8 @@ const router = useRouter()
 const showMessage = inject("showMessage");
 const showError = inject("showError");
 
+const search = ref("");
+
 const priorityMapping = {
   LOW: "低",
   MEDIUM: "中",
@@ -24,18 +26,33 @@ const mapPriority = (priority) => {
 };
 
 const fetchAllProjects = async () => {
-  try {
-    const response = (await http.get("http://localhost:8081/api/project/list/all", {
-      params: {
-        page: currentPage.value,
-        size: pageSize.value,
-      }
-    }));
-    projects.value = response.data.content || [];
-    total.value = response.data.totalElements || 0;
-  } catch (error) {
-    showError("获取项目失败" + error.message);
-  }
+  if (search.value) {
+    try {
+      const response = (await http.get("http://localhost:8081/api/project/list/search", {
+        params: {
+          name: search.value,
+          page: currentPage.value,
+          size: pageSize.value,
+        }
+      }));
+      projects.value = response.data.content || [];
+      total.value = response.data.totalElements || 0;
+    } catch (error) {
+      showError("获取项目失败" + error.message);
+    }
+  } else
+    try {
+      const response = (await http.get("http://localhost:8081/api/project/list/all", {
+        params: {
+          page: currentPage.value,
+          size: pageSize.value,
+        }
+      }));
+      projects.value = response.data.content || [];
+      total.value = response.data.totalElements || 0;
+    } catch (error) {
+      showError("获取项目失败" + error.message);
+    }
 };
 
 const handleCurrentChange = (page) => {
@@ -45,6 +62,10 @@ const handleCurrentChange = (page) => {
 
 const handleSizeChange = (size) => {
   pageSize.value = size;
+  fetchAllProjects();
+}
+
+const onSearchFieldChange = () => {
   fetchAllProjects();
 }
 
@@ -64,8 +85,8 @@ onMounted(async () => {
 </script>
 
 <template>
-  <el-table :data="projects" border style="width: 100%">
-    <el-table-column fixed prop="projectName" label="项目名称" width="150">
+  <el-table :data="projects" border style="width: 100%" class-name="proj-table">
+    <el-table-column fixed prop="projectName" label="项目名称" width="200">
       <template #default="scope">
         <el-tooltip class="item" effect="dark" :content="scope.row.projectName" placement="top">
           <span class="ellipsis-text">{{ scope.row.projectName }}</span>
@@ -93,6 +114,13 @@ onMounted(async () => {
     </el-table-column>
     <el-table-column prop="progress" label="进度" width="120"/>
     <el-table-column fixed="right" label="进入项目" min-width="120">
+      <template #header>
+        <el-input v-model="search" size="small"
+                  placeholder="搜索项目"
+                  @change="onSearchFieldChange"
+                  @keyup.enter="onSearchFieldChange"
+        />
+      </template>
       <template #default="{ row }">
         <el-button link type="primary" size="small" @click="selectRow(row)">
           查看
@@ -121,5 +149,10 @@ onMounted(async () => {
   overflow: hidden;
   text-overflow: ellipsis;
   vertical-align: middle;
+}
+
+.proj-table {
+  border: 1px solid #ddd;
+  border-radius: 2px;
 }
 </style>

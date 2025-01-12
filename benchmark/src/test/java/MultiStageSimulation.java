@@ -102,6 +102,8 @@ public class MultiStageSimulation extends Simulation {
             .exec(http("Get Project List")
                     .get("/api/project/list/all")
                     .header("Authorization", "Bearer #{accessToken}")
+                    .queryParam("page", "1")
+                    .queryParam("size", "100")
                     .check(status().is(200)) // 检查状态码
             );
 

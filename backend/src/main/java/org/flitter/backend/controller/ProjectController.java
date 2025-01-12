@@ -57,6 +57,11 @@ public class ProjectController {
         return ResponseEntity.ok(projectService.getAllProjects(PageRequest.of(page - 1, size)));
     }
 
+    @GetMapping("/list/search")
+    public ResponseEntity<?> getProjectListSearch(@RequestParam String name, @RequestParam int page, @RequestParam int size) {
+        return ResponseEntity.ok(projectService.getProjectsLike(name, PageRequest.of(page - 1, size)));
+    }
+
     @GetMapping("/list/participated")
     public ResponseEntity<?> getParticipatedProjects() {
         return ResponseEntity.ok(projectService.getAllParticipatedProjects());

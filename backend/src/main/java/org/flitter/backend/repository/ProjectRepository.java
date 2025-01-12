@@ -27,5 +27,11 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
             "p.description, p.startDate, p.endDate, p.priority, p.progress, " +
             "p.isCompleted) FROM Project p")
     Page<ProjectListDTO> findAllProjectsDTO(Pageable pageable);
+
+
+    @Query("SELECT new org.flitter.backend.dto.ProjectListDTO(p.id, p.projectName, " +
+            "p.description, p.startDate, p.endDate, p.priority, p.progress, " +
+            "p.isCompleted) FROM Project p WHERE p.projectName LIKE CONCAT('%', :name, '%')")
+    Page<ProjectListDTO> findProjectsDTOWhichNameLike(@Param("name") String name, Pageable pageable);
 }
 

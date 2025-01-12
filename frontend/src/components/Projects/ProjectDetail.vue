@@ -2,7 +2,7 @@
   <div>
     <!-- 项目详情 -->
     <h1>项目详情</h1>
-    <div v-if="!isEditing">
+    <div v-if="!isEditing" class="project-info">
       <p><strong>项目名称：</strong>{{ project.projectName }}</p>
       <p><strong>描述：</strong>{{ project.description }}</p>
       <p><strong>开始日期：</strong>{{ project.startDate }}</p>
@@ -10,12 +10,13 @@
       <p><strong>优先级：</strong>{{ project.priority }}</p>
       <p><strong>完成状态：</strong>{{ project.isCompleted ? "已完成" : "未完成" }}</p>
       <p><strong>进度：</strong>{{ project.progress }}%</p>
+      <p><strong>负责人:</strong>{{ project.manager?.username }}</p>
       <button @click="isEditing = true">编辑信息</button>
     </div>
     <div v-else>
       <label>
         项目名称：
-        <input v-model="project.projectName"/>
+        <textarea v-model="project.projectName"/>
       </label>
       <label>
         描述：
@@ -223,5 +224,27 @@ onMounted(() => {
 </script>
 
 <style scoped>
+
+.project-info p{
+  font-size: 14px;
+  margin: 10px 0;
+  line-height: 1.5;
+}
+
+input[type="text"],
+input[type="date"],
+input[type="number"],
+textarea,
+select {
+  width: 100%;
+  padding: 10px;
+  margin: 5px 0 20px 0;
+  display: block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 14px;
+  resize: vertical;
+}
 
 </style>

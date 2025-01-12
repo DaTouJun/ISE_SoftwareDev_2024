@@ -76,6 +76,11 @@ public class ProjectService {
     }
 
     @Transactional
+    public Page<ProjectListDTO> getProjectsLike(String name, Pageable pageable) {
+        return projectRepository.findProjectsDTOWhichNameLike(name, pageable);
+    }
+
+    @Transactional
     public List<ProjectListDTO> getAllParticipatedProjects() {
         User currentUser = securityConfig.getCurrentUser();
         return projectRepository.findProjectListDTOByParticipant(currentUser);
