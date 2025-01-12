@@ -39,7 +39,7 @@ const register = async () => {
     return
   }
   try {
-    await axios.http('http://localhost:8081/api/auth/register', {
+    await http.post('http://localhost:8081/api/auth/register', {
       username: username.value,
       password: password.value,
       email: email.value,

@@ -27,7 +27,7 @@ export default {
       formData.append("documentId", 1); // Example document ID
 
       try {
-        const response = await axios.post("/api/documents/upload", formData, {
+        const response = await http.post("/api/documents/upload", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         console.log("Upload success", response.data);
@@ -37,7 +37,7 @@ export default {
     },
     async downloadFile() {
       try {
-        const response = await axios.get("/api/documents/download/1", {
+        const response = await http.get("/api/documents/download/1", {
           responseType: "blob",
         });
         const url = window.URL.createObjectURL(new Blob([response.data]));

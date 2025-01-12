@@ -142,7 +142,7 @@
 
 </template>
 
-<script lang="ts" ] setup>
+<script setup>
 import {
   Document,
   Promotion,
@@ -151,20 +151,19 @@ import {
   Setting,
   Bell,
 } from '@element-plus/icons-vue'
-import {reactive, ref, onMounted, computed} from 'vue'
-import axios from 'axios';
-import 'element-plus/theme-chalk/el-message.css'
-import {ElMessage} from 'element-plus'
-
+import { reactive, ref, onMounted, computed } from 'vue';
+import 'element-plus/theme-chalk/el-message.css';
+import { ElMessage } from 'element-plus'
+import http from '@/http/request.js';
 onMounted(() => {
   fetchMessages();
   fetchUsers()
 })
 
-const handleOpen = (key: string, keyPath: string[]) => {
+const handleOpen = (key, keyPath) => {
   console.log(key, keyPath)
 }
-const handleClose = (key: string, keyPath: string[]) => {
+const handleClose = (key, keyPath) => {
   console.log(key, keyPath)
 }
 
@@ -183,12 +182,8 @@ const selectedMessage = ref(null)
 // 获取消息列表
 const fetchMessages = async () => {
   try {
-    const response = await axios.post('http://localhost:8081/api/messages/all')
+    const response = await http.post('http://localhost:8081/api/messages/all')
     messages.splice(0, messages.length, ...response.data) // 更新消息数据
-    // ElMessage({
-    //   message: '获取消息成功',
-    //   type: 'success',
-    // })
   } catch (error) {
     console.error('获取消息失败:', error)
     ElMessage({
@@ -204,7 +199,7 @@ const unreadCount = computed(() => {
 })
 
 // 格式化时间
-const formatTime = (row: any, column: any, value: string) => {
+const formatTime = (row, column, value) => {
   const date = new Date(value)
   return date.toLocaleString()
 }
@@ -221,15 +216,15 @@ const sortedMessages = computed(() => {
 })
 
 // 查看按钮逻辑
-const handleView = (row: any) => {
+const handleView = (row) => {
   selectedMessage.value = row
   selectedMessageDialog.value = true
 }
 
 // 标记消息为已读
-const markAsRead = async (messageId: number) => {
+const markAsRead = async (messageId) => {
   try {
-    const response = await axios.post('http://localhost:8081/api/messages/markAsRead', {messageId})
+    const response = await http.post('http://localhost:8081/api/messages/markAsRead', { messageId })
     // 更新消息的状态
     const message = messages.find(msg => msg.id === messageId)
     if (message) {
@@ -249,7 +244,7 @@ const emailContent = ref('')
 // 获取用户列表
 const fetchUsers = async () => {
   try {
-    const response = await axios.get('http://localhost:8081/api/user/all')
+    const response = await http.get('http://localhost:8081/api/user/all')
     userList.splice(0, userList.length, ...response.data)
   } catch (error) {
     console.error('获取用户列表失败:', error)
@@ -262,7 +257,7 @@ const sendEmail = async () => {
     return alert('请选择用户并填写内容')
   }
   try {
-    await axios.post('http://localhost:8081/api/messages/send', {
+    await http.post('http://localhost:8081/api/messages/send', {
       receiverId: [selectedUser.value], // 用户ID需以数组形式传递
       message: [emailContent.value]    // 消息内容需以数组形式传递
     })
@@ -282,8 +277,8 @@ const sendEmail = async () => {
   }
   await fetchMessages()
 }
-
 </script>
+
 
 <style scoped>
 .message-icon {

@@ -1,6 +1,5 @@
 <script setup>
 import {ref, onMounted, inject} from "vue";
-import axios from "axios";
 import "@/assets/project.css"
 import http from "@/http/request.js";
 import {useRouter} from "vue-router";

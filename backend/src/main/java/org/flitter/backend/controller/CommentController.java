@@ -26,6 +26,7 @@ public class CommentController {
     public ResponseEntity<?> getComment(@RequestParam Long id) {
         try {
             List<CommentAdapter> comments=commentService.getAllComments(id);
+            //在这里加一个判断是字符串评论还是文件评论
             return ResponseEntity.ok(comments);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.toString());

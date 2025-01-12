@@ -91,6 +91,8 @@
         <el-button type="primary" @click="addParticipants">添加</el-button>
       </el-form>
     </div>
+    <!-- 跳转到项目甘特图页面 -->
+    <button @click="goToGantt">查看甘特图</button>
   </div>
   <TaskOfProjectList :project-id="project.id" />
 </template>
@@ -101,6 +103,7 @@ import axios from "axios";
 import {useRoute} from "vue-router";
 import http from "@/http/request.js";
 import TaskOfProjectList from "@/components/Task/TaskOfProjectList.vue";
+import router from "@/router/index.js";
 
 const showError = inject("showError");
 const showMessage = inject("showMessage");
@@ -167,7 +170,7 @@ const addParticipants = async () => {
   }
 
   try {
-    await axios.post("http://localhost:8081/api/project/add-participant", {
+    await http.post("http://localhost:8081/api/project/add-participant", {
       projectId: projectId,
       userIds: selectedCandidates.value, // 发送选中的用户 ID 列表
     });
@@ -208,9 +211,17 @@ const saveProject = async () => {
   }
 };
 
+// 跳转到项目甘特图页面
+const goToGantt = () => {
+  router.push({ name: "ProjectGantt", params: { id: projectId } });
+};
 
 onMounted(() => {
   fetchProjectDetails();
   fetchCandidates();
 });
 </script>
+
+<style scoped>
+
+</style>

@@ -10,6 +10,7 @@ import org.flitter.backend.entity.User;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -20,6 +21,7 @@ public class TaskAssigneeDTO {
     private Long projectId;
     private Project belongedProject;
     private Set<User> assignees = new HashSet<>();
+    private List<Long> assigneesId;
     private String title;
     private String description;
     private User publisher;

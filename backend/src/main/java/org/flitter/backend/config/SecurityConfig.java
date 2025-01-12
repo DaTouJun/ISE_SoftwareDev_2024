@@ -69,9 +69,9 @@ public class SecurityConfig {
                 auth.requestMatchers("/api/auth/**").permitAll()    // 开启登录
                         .requestMatchers("/api/project/**").authenticated() // 仅用户角色可访问项目接口
                         .requestMatchers("/api/user/**").authenticated()
-                        .requestMatchers("/api/project/create").hasAuthority("project:create")
-                        .requestMatchers("/api/projects/**").hasAuthority("project:read")
-                        .requestMatchers("/api/users/role/update").hasAuthority("user:read")
+                        .requestMatchers("/api/project/create").authenticated()
+                        .requestMatchers("/api/projects/**").authenticated()
+                        .requestMatchers("/api/users/role/update").hasAuthority("user:role")
                         .anyRequest().authenticated());
 
         http.sessionManagement(session -> {

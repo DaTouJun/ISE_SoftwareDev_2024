@@ -3,7 +3,6 @@
     <!-- 任务标题和描述 -->
     <h2>任务名称：{{ task.title }}</h2>
 
-
     <!-- 任务进度展示 -->
     <div class="task-progress">
       <p>任务进度: {{ taskProgress }}%</p>
@@ -16,6 +15,38 @@
           size="small"
       ></el-input-number>
       <el-button :loading="loading" type="primary" @click="updateProgress">更新任务进度</el-button>
+    </div>
+
+    <el-divider>参与人员管理</el-divider>
+    <div class="assignee-management">
+      <!-- 显示已选择的参与人员 -->
+      <p>当前参与人员：</p>
+      <ul>
+        <li v-for="user in selectedAssignees" :key="user.id">
+          {{ user.username }}
+          <el-button
+              type="text"
+              size="small"
+              @click="removeAssignee(user.id)"
+          >移除</el-button>
+        </li>
+      </ul>
+
+      <!-- 选择参与人员 -->
+      <el-select
+          v-model="selectedUser"
+          placeholder="选择用户"
+          size="small"
+          :clearable="true"
+      >
+        <el-option
+            v-for="user in allUsers"
+            :key="user.id"
+            :label="user.username"
+            :value="user"
+        ></el-option>
+      </el-select>
+      <el-button type="primary" size="small" @click="addAssignee">添加参与人员</el-button>
     </div>
 
     <!-- 任务详情 -->
@@ -33,7 +64,7 @@
       <div v-for="(log, index) in task.logs" :key="index" class="comment-item">
         <p><strong>{{ log.publisher }}:</strong> <span>{{ log.timestamp }}</span></p>
         <p>{{ log.content }}</p>
-        <hr />
+        <hr/>
       </div>
     </div>
 
@@ -45,28 +76,51 @@
         rows="3"
     ></el-input>
 
-    <!-- 文件上传区 -->
-    <el-upload
-        ref="upload"
-        class="upload-demo"
-        action="http://localhost:8081/api/comment/add/file"
-        :on-success="handleFileSuccess"
-        :on-error="handleFileError"
-        :show-file-list="false"
-        :auto-upload="false"
-    :data="uploadData"
-    >
-    <el-button size="small" type="primary">上传文件</el-button>
-    </el-upload>
-
     <el-button type="primary" @click="submitComment">提交评论</el-button>
+
+    <!-- 文档选择 -->
+    <el-select v-model="selectedDocumentId" placeholder="请选择文档" :loading="loading">
+      <el-option
+          v-for="document in documents"
+          :key="document.id"
+          :label="document.name"
+          :value="document.id"
+      ></el-option>
+    </el-select>
+    <!-- 版本号输入 -->
+    <el-input
+        v-model="selectedVersion"
+        placeholder="请输入版本号"
+        label="版本号"
+    ></el-input>
+
+    <!-- 上传按钮 -->
+    <!-- 文件选择 -->
+    <!--    <el-upload-->
+    <!--        ref="upload"-->
+    <!--        class="upload-demo"-->
+    <!--        :action="uploadUrl"-->
+    <!--        :on-success="handleFileSuccess"-->
+    <!--        :on-error="handleFileError"-->
+    <!--        :show-file-list="false"-->
+    <!--        :auto-upload="false"-->
+    <!--        :v-model="uploadData"-->
+    <!--        @change="handleFileChange"-->
+    <!--    >-->
+    <!--      <el-button size="small" type="primary">选择文件</el-button>-->
+    <!--    </el-upload>-->
+    <input type="file" @change="handleFileChange"/>
+
+    <!-- 上传按钮 -->
+    <el-button size="small" type="primary" @click="handleUploadClick">上传文件</el-button>
+
   </div>
 </template>
 
 
 <script setup>
-import {ref, onMounted} from 'vue';
-import axios from 'axios';
+import {ref, onMounted, inject} from 'vue';
+import http from '@/http/request.js';
 import {ElMessage} from 'element-plus';
 import {useRoute} from "vue-router";
 
@@ -75,90 +129,103 @@ const comment = ref('');
 const taskProgress = ref(0);
 const route = useRoute();
 const taskId = route.params.taskId;
+const uploadData = ref({});
+const file = ref(null);
+const selectedVersion = ref('');  // 初始化 selectedVersion 变量，作为响应式数据
+const selectedDocumentId = ref();  // 选中的文档ID，初始值为null
+const documents = ref([]);  // 存放文档列表
+const showError = inject("showError");
 
+let selectedFile;
+
+// 上传文件
+const uploadFile = async (documentId, taskId, version, file) => {
+  const formData = new FormData();
+  formData.append('documentId', documentId);
+  formData.append('taskId', taskId);
+  formData.append('version', version);
+  formData.append('file', file);
+
+  try {
+    const response = await http.post('http://localhost:8081/api/comment/add/file', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    ElMessage.success('文件上传成功');
+    return response.data;
+  } catch (error) {
+    console.error('文件上传失败', error);
+    ElMessage.error('文件上传失败');
+  }
+};
+
+// 获取任务详情
 const fetchTaskDetail = async (taskId) => {
   try {
-    const response = await axios.get(`http://localhost:8081/api/task/getbyid?id=${taskId}`);
-    // 更新任务信息
+    const response = await http.get(`http://localhost:8081/api/task/getbyid?id=${taskId}`);
     task.value = {
       id: response.data.id,
       title: response.data.title,
       description: response.data.description,
-      publisher: response.data.publisher.username, // 负责人直接取用户名
+      publisher: response.data.publisher.username,
+      assignees: response.data.assigneesId,
       startDate: response.data.startDate,
       endDate: response.data.endDate,
       isCompleted: response.data.isCompleted,
-      percentCompleted:response.data.percentCompleted,
+      percentCompleted: response.data.percentCompleted,
+      projectId: response.data.projectId, // 获取projectId
+      logs: []  // 确保初始化日志数组
     };
+    taskProgress.value = task.value.percentCompleted;// 根据任务的projectId加载文档列表
+    await loadDocuments(task.value.projectId); // 使用获取到的projectId
 
-    // 初始化任务进度
-    taskProgress.value = task.value.percentCompleted;
   } catch (error) {
     ElMessage.error('获取任务详情失败');
   }
 };
+// 获取文档列表
+const loadDocuments = async (projectId) => {
+  if (!projectId) {
+    ElMessage.error('无效的项目ID');
+    return;
+  }
 
+  try {
+    const response = await http.post('http://localhost:8081/api/documents/projects', {projectId});
+    documents.value = response.data.map(doc => ({
+      id: doc.documentId,
+      name: doc.name,
+    }));
+  } catch (error) {
+    console.error('获取文档列表失败:', error);
+    ElMessage.error('获取文档列表失败');
+  }
+};
 // 进度更新
 const updateProgress = async () => {
   try {
-    // 更新进度相关字段
-    task.value.percentCompleted = taskProgress.value; // 更新进度
-    task.value.isCompleted = taskProgress.value === 1; // 如果进度是 100%，标记为完成
+    task.value.percentCompleted = taskProgress.value;
+    task.value.isCompleted = taskProgress.value === 100;
 
-    // 构造发送数据
     const requestData = {
       id: task.value.id,
       title: task.value.title,
       description: task.value.description,
       startDate: task.value.startDate,
       endDate: task.value.endDate,
-      isCompleted: task.value.isCompleted, // 如果进度是100%，标记为完成
-      percentCompleted: task.value.percentCompleted, // 任务进度
-      belongedProject: null, // 假设归属项目ID为1，需根据实际情况设置
-      publisher: { id: task.value.publisher.id },
-      assignees: null, // 假设有固定分配人，需根据实际情况设置
+      isCompleted: task.value.isCompleted,
+      percentCompleted: task.value.percentCompleted,
+      publisher: {id: task.value.publisher.id},
     };
 
-    const response = await axios.post('http://localhost:8081/api/task/modify', requestData);
-
+    const response = await http.post('/api/task/modify', requestData);
     ElMessage.success('任务进度更新成功');
   } catch (error) {
     ElMessage.error('任务进度更新失败');
   }
 };
 
-
-// 获取评论
-const fetchComments = async () => {
-  try {
-    const response = await axios.get(`http://localhost:8081/api/comment/get?id=${taskId}`);
-    task.value.logs = response.data.map((comment) => ({
-      timestamp: new Date(comment.datetime).toLocaleString(),
-      content: comment.stringComment,
-      publisher: comment.publisher.username, // 假设有评论发布者的用户名
-    }));
-  } catch (error) {
-    console.error('获取评论失败', error);
-  }
-};
-
-// 处理文件上传成功
-const handleFileSuccess = (response, file, fileList) => {
-  // 文件上传成功后，更新 uploadData 数据
-  file.value = file;
-  uploadData.value = {
-    documentId: response.data.documentId, // 假设返回的文件ID
-    taskId: task.value.id,
-    version: 1, // 版本可以根据需要处理
-    file: file,
-  };
-  ElMessage.success('文件上传成功');
-};
-
-// 处理文件上传失败
-const handleFileError = (err, file, fileList) => {
-  ElMessage.error('文件上传失败');
-};
 // 提交评论
 const submitComment = async () => {
   if (!comment.value.trim()) {
@@ -167,19 +234,23 @@ const submitComment = async () => {
   }
 
   try {
-    const response = await axios.post('http://localhost:8081/api/comment/add/string', {
-      stringComment: comment.value,  // 评论内容
-      belongedTask: {
-        id: task.value.id  // 任务 ID
-      }
+    // 提交评论
+    const response = await http.post('http://localhost:8081/api/comment/add/string', {
+      stringComment: comment.value,
+      belongedTask: {id: task.value.id},
     });
 
-    // 判断接口返回的 id 是否存在，若存在表示评论提交成功
+    // 假设接口返回的是包含评论内容和用户信息的数据
     if (response.data && response.data.id) {
-      task.value.logs.push({
-        timestamp: new Date().toISOString(),
-        content: comment.value,
-      });
+      // 从返回的评论对象中提取评论内容和发布者信息
+      const newComment = {
+        timestamp: new Date().toLocaleString(),  // 本地时间格式化
+        content: response.data.stringComment,  // 获取评论内容
+        publisher: response.data.publisher.username,  // 获取发布者用户名
+      };
+
+      // 更新任务的评论列表
+      task.value.logs.push(newComment);
       comment.value = '';  // 清空评论框
       ElMessage.success('评论提交成功');
     } else {
@@ -191,15 +262,161 @@ const submitComment = async () => {
   }
 };
 
+// 获取评论
+const fetchComments = async () => {
+  try {
+    const response = await http.get(`/api/comment/get?id=${taskId}`);
+
+    if (response.data && Array.isArray(response.data)) {
+      task.value.logs = [...response.data.map((comment) => ({
+        timestamp: new Date(comment.datetime).toLocaleString(),  // 格式化时间
+        content: comment.stringComment,  // 获取评论内容
+        publisher: comment.publisher.username,  // 获取发布者用户名
+      }))];  // 使用扩展运算符来确保 Vue 侦测到新数组的变化
+    } else {
+      console.error('评论数据格式不正确');
+    }
+  } catch (error) {
+    console.error('获取评论失败', error);
+  }
+};
+
+// 监听文件选择变化
+const handleFileChange = (event) => {
+  selectedFile = event.target.files[0];
+};
+
+// 上传文件
+const handleUploadClick = async () => {
+  console.log('选择的文件:', selectedFile);
+  if (!selectedFile) {
+    ElMessage.warning('请先选择文件');
+    return;
+  }
+
+  if (!selectedDocumentId.value) {
+    showError("未选择文档");
+    return;
+  }
+
+  // const selectedFile = file.value;
+  const version = selectedVersion.value || '1.0';
+
+  const formData = new FormData();
+  formData.append('file', selectedFile);
+  formData.append('version', version);
+  formData.append('documentId', Number(selectedDocumentId.value)); // 传递 documentId
+  formData.append('taskId', Number(taskId));
+
+// 打印 FormData 中的内容及数据类型
+  formData.forEach((value, key) => {
+    console.log(`Key: ${key}, Value: ${value}, Type of Value: ${typeof value}`);
+  });
 
 
+  try {
+    // const response = await http.post('/api/comment/add/file', {
+    //   formData,
+    // });
+    const response = await http.post('/api/comment/add/file', formData,
+        {
+          headers: {"Content-Type": "multipart/form-data"},
+        });
+
+    if (response.ok) {
+      ElMessage.success('文件上传成功');
+    } else {
+      ElMessage.error('文件上传失败');
+    }
+  } catch (error) {
+    console.error('上传文件时发生错误:', error);
+    ElMessage.error('文件上传失败');
+  }
+};
+
+
+const handleFileSuccess = (response, file, fileList) => {
+  ElMessage.success('文件上传成功');
+};
+
+const handleFileError = (error, file, fileList) => {
+  ElMessage.error('文件上传失败');
+};
+
+import { reactive } from 'vue';
+
+const allUsers = ref([]); // 所有用户列表
+const taskAssignees = task.value.assignees;
+const selectedAssignees = reactive([]); // 当前已选择的参与人员
+const selectedUser = ref(null); // 临时存储当前选择的用户
+
+// 获取所有用户
+const fetchAllUsers = async () => {
+  try {
+    const response = await http.get('/api/user/all');
+    allUsers.value = response.data;
+  } catch (error) {
+    console.error('获取用户列表失败', error);
+    ElMessage.error('获取用户列表失败');
+  }
+};
+
+// 添加参与者
+const addAssignee = async (user) => {
+  if (taskAssignees.value.some((assignee) => assignee.id === user.id)) {
+    ElMessage.warning('该用户已是参与者');
+    return;
+  }
+
+  taskAssignees.value.push(user);
+
+  try {
+    await updateTaskAssignees();
+    ElMessage.success('参与者添加成功');
+  } catch (error) {
+    console.error('添加参与者时发生错误:', error);
+    ElMessage.error('参与者添加失败');
+  }
+};
+
+// 移除参与者
+const removeAssignee = async (user) => {
+  const index = taskAssignees.value.findIndex((assignee) => assignee.id === user.id);
+  if (index === -1) {
+    ElMessage.warning('该用户不是参与者');
+    return;
+  }
+
+  taskAssignees.value.splice(index, 1);
+
+  try {
+    await updateTaskAssignees();
+    ElMessage.success('参与者移除成功');
+  } catch (error) {
+    console.error('移除参与者时发生错误:', error);
+    ElMessage.error('参与者移除失败');
+  }
+};
+
+// 更新任务的参与者信息
+const updateTaskAssignees = async () => {
+  const requestData = {
+    assignees: taskAssignees.value.map((assignee) => ({ id: assignee.id })),
+  };
+  console.log(requestData);
+  await http.post('http://localhost:8081/api/task/modify', requestData);
+};
 
 // 页面加载时初始化任务信息和评论
 onMounted(() => {
-  fetchTaskDetail(taskId);
-  fetchComments();
+  fetchComments(taskId);  // 获取评论
+  fetchAllUsers();   // 获取任务参与者
+  fetchTaskDetail(taskId);  // 获取任务详情
+  fetchComments(taskId);  // 获取评论
+
 });
 </script>
+
 
 <style scoped>
 .task-detail {
@@ -219,5 +436,21 @@ onMounted(() => {
 
 .comment-item p {
   margin: 5px 0;
+}
+
+.assignee-management {
+  margin-top: 20px;
+}
+
+.assignee-management ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.assignee-management li {
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 </style>

@@ -29,10 +29,12 @@ http.interceptors.response.use(
     },
     async (error) => {
         const originalRequest = error.config;
+
         if (!originalRequest) {
             console.error("original request not defined:", error);
             return Promise.reject(error);
         }
+
 
         if (error.response) {
             const status = error.response.status;
