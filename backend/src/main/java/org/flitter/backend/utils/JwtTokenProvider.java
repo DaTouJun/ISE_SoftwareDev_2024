@@ -47,7 +47,7 @@ public class JwtTokenProvider {
                 .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();
-        System.err.println("token get username: " + us);
+//        System.err.println("token get username: " + us);
         return us;
     }
 

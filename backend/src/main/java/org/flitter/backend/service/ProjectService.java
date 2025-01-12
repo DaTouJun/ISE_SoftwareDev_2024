@@ -10,6 +10,8 @@ import org.flitter.backend.entity.User;
 import org.flitter.backend.repository.ProjectRepository;
 import org.flitter.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -69,8 +71,8 @@ public class ProjectService {
     }
 
     @Transactional
-    public List<ProjectListDTO> getAllProjects() {
-        return projectRepository.findAllProjectsDTO();
+    public Page<ProjectListDTO> getAllProjects(Pageable pageable) {
+        return projectRepository.findAllProjectsDTO(pageable);
     }
 
     @Transactional

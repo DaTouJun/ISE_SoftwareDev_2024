@@ -106,16 +106,18 @@ public class MultiStageSimulation extends Simulation {
             );
 
     {
+        // stage1
 //        ensureCsvIsPopulated(); // 生成的用户名和密码
         // 配置场景，支持单独运行
         setUp(  // 建议先运行注册，然后去运行登录和请求测试
+                // stage2
 //                registerUsers.injectOpen(
-//                        rampUsersPerSec(0).to(100).during(60), // 1 分钟加压阶段
-//                        rampUsersPerSec(100).to(0).during(60)  // 1 分钟减压阶段
+//                        atOnceUsers(1200)
 //                ).protocols(httpProtocol)
+                // stage3
                 loginAndRequest.injectOpen(
-                        rampUsersPerSec(0).to(100).during(60), // 1 分钟加压阶段
-                        rampUsersPerSec(100).to(0).during(60)  // 1 分钟减压阶段
+                        rampUsersPerSec(0).to(100).during(30), // 1 分钟加压阶段
+                        rampUsersPerSec(100).to(0).during(30)  // 1 分钟减压阶段
                 ).protocols(httpProtocol)
         );
     }

@@ -4,8 +4,11 @@ import "@/assets/project.css"
 import http from "@/http/request.js";
 import {useRouter} from "vue-router";
 
+const projects = ref([]);
+const total = ref(0);
+const pageSize = ref(20);
+const currentPage = ref(1);
 
-let projects = ref([]);
 const router = useRouter()
 const showMessage = inject("showMessage");
 const showError = inject("showError");
@@ -22,13 +25,28 @@ const mapPriority = (priority) => {
 
 const fetchAllProjects = async () => {
   try {
-    const response = (await http.get("http://localhost:8081/api/project/list/all")).data;
-    projects.value = response || [];
+    const response = (await http.get("http://localhost:8081/api/project/list/all", {
+      params: {
+        page: currentPage.value,
+        size: pageSize.value,
+      }
+    }));
+    projects.value = response.data.content || [];
+    total.value = response.data.totalElements || 0;
   } catch (error) {
     showError("获取项目失败" + error.message);
   }
 };
 
+const handleCurrentChange = (page) => {
+  currentPage.value = page;
+  fetchAllProjects();
+}
+
+const handleSizeChange = (size) => {
+  pageSize.value = size;
+  fetchAllProjects();
+}
 
 // 选择任务，跳转到任务详情页面
 const selectRow = async (row) => {
@@ -46,8 +64,14 @@ onMounted(async () => {
 </script>
 
 <template>
-  <el-table :data="projects" style="width: 100%">
-    <el-table-column fixed prop="projectName" label="项目名称" width="150"/>
+  <el-table :data="projects" border style="width: 100%">
+    <el-table-column fixed prop="projectName" label="项目名称" width="150">
+      <template #default="scope">
+        <el-tooltip class="item" effect="dark" :content="scope.row.projectName" placement="top">
+          <span class="ellipsis-text">{{ scope.row.projectName }}</span>
+        </el-tooltip>
+      </template>
+    </el-table-column>
     <el-table-column prop="startDate" label="开始时间" width="150"/>
     <el-table-column prop="endDate" label="截止时间" width="150"/>
     <el-table-column prop="description" label="项目描述" width="300">
@@ -76,6 +100,17 @@ onMounted(async () => {
       </template>
     </el-table-column>
   </el-table>
+
+  <el-pagination
+      background
+      layout="prev, pager, next, size, ->, total"
+      :total="total"
+      :page-size="pageSize"
+      :current-page="currentPage"
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
+      style="margin-top: 10px; text-align: right;"
+  />
 </template>
 
 <style scoped>

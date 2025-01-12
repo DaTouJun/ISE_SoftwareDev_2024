@@ -24,7 +24,7 @@ public class JwtAuthenticationFilter extends BasicAuthenticationFilter {
             throws java.io.IOException, jakarta.servlet.ServletException {
         String token = getJwtFromRequest(request);
 
-        if (token != null && jwtTokenProvider.validateToken(token, true, request)) {
+        if (token != null && !token.isEmpty() && jwtTokenProvider.validateToken(token, true, request)) {
             String username = jwtTokenProvider.getUsernameFromJwt(token, true);
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(username, null, null);

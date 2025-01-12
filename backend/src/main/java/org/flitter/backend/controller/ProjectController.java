@@ -9,6 +9,7 @@ import org.flitter.backend.entity.enums.Priority;
 import org.flitter.backend.service.ProjectService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -52,8 +53,8 @@ public class ProjectController {
     }
 
     @GetMapping("/list/all")// 看到所有的项目列表
-    public ResponseEntity<?> getProjectList() {
-        return ResponseEntity.ok(projectService.getAllProjects());
+    public ResponseEntity<?> getProjectList(@RequestParam int page, @RequestParam int size) {
+        return ResponseEntity.ok(projectService.getAllProjects(PageRequest.of(page - 1, size)));
     }
 
     @GetMapping("/list/participated")
