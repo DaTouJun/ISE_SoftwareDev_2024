@@ -17,38 +17,6 @@
       <el-button :loading="loading" type="primary" @click="updateProgress">更新任务进度</el-button>
     </div>
 
-    <el-divider>参与人员管理</el-divider>
-    <div class="assignee-management">
-      <!-- 显示已选择的参与人员 -->
-      <p>当前参与人员：</p>
-      <ul>
-        <li v-for="user in selectedAssignees" :key="user.id">
-          {{ user.username }}
-          <el-button
-              type="text"
-              size="small"
-              @click="removeAssignee(user.id)"
-          >移除</el-button>
-        </li>
-      </ul>
-
-      <!-- 选择参与人员 -->
-      <el-select
-          v-model="selectedUser"
-          placeholder="选择用户"
-          size="small"
-          :clearable="true"
-      >
-        <el-option
-            v-for="user in allUsers"
-            :key="user.id"
-            :label="user.username"
-            :value="user"
-        ></el-option>
-      </el-select>
-      <el-button type="primary" size="small" @click="addAssignee">添加参与人员</el-button>
-    </div>
-
     <!-- 任务详情 -->
     <el-divider>任务详情</el-divider>
     <div>
@@ -57,6 +25,31 @@
       <p><strong>结束时间:</strong> {{ task.endDate }}</p>
       <p>任务描述：{{ task.description }}</p>
     </div>
+
+    <!-- 当前参与用户 -->
+    <el-divider>当前参与用户</el-divider>
+    <div v-if="currentAssignees.length > 0">
+      <ul>
+        <li v-for="user in currentAssignees" :key="user.id">
+          {{ user.username }} (ID: {{ user.id }})
+        </li>
+      </ul>
+    </div>
+    <div v-else>
+      <p>暂无参与用户</p>
+    </div>
+
+    <!-- 添加参与用户 -->
+    <el-divider>添加参与用户</el-divider>
+    <el-select v-model="selectedUserId" placeholder="选择用户">
+      <el-option
+          v-for="user in userList"
+          :key="user.id"
+          :label="user.username"
+          :value="user.id"
+      ></el-option>
+    </el-select>
+    <el-button type="primary" @click="addAssignee">添加用户</el-button>
 
     <!-- 评论显示区域 -->
     <el-divider>评论</el-divider>
@@ -268,11 +261,16 @@ const fetchComments = async () => {
     const response = await http.get(`/api/comment/get?id=${taskId}`);
 
     if (response.data && Array.isArray(response.data)) {
-      task.value.logs = [...response.data.map((comment) => ({
-        timestamp: new Date(comment.datetime).toLocaleString(),  // 格式化时间
-        content: comment.stringComment,  // 获取评论内容
-        publisher: comment.publisher.username,  // 获取发布者用户名
-      }))];  // 使用扩展运算符来确保 Vue 侦测到新数组的变化
+      task.value.logs = [...response.data.map((comment) => {
+        // 如果评论内容为空，则使用 filename 并加上尾巴
+        const content = comment.stringComment || `${comment.filename} 已上传`;
+
+        return {
+          timestamp: new Date(comment.datetime).toLocaleString(),  // 格式化时间
+          content,  // 获取评论内容，若为空则使用文件名和尾巴
+          publisher: comment.publisher.username,  // 获取发布者用户名
+        };
+      })];  // 使用扩展运算符来确保 Vue 侦测到新数组的变化
     } else {
       console.error('评论数据格式不正确');
     }
@@ -280,6 +278,7 @@ const fetchComments = async () => {
     console.error('获取评论失败', error);
   }
 };
+
 
 // 监听文件选择变化
 const handleFileChange = (event) => {
@@ -299,7 +298,6 @@ const handleUploadClick = async () => {
     return;
   }
 
-  // const selectedFile = file.value;
   const version = selectedVersion.value || '1.0';
 
   const formData = new FormData();
@@ -308,23 +306,19 @@ const handleUploadClick = async () => {
   formData.append('documentId', Number(selectedDocumentId.value)); // 传递 documentId
   formData.append('taskId', Number(taskId));
 
-// 打印 FormData 中的内容及数据类型
-  formData.forEach((value, key) => {
-    console.log(`Key: ${key}, Value: ${value}, Type of Value: ${typeof value}`);
-  });
-
-
   try {
-    // const response = await http.post('/api/comment/add/file', {
-    //   formData,
-    // });
-    const response = await http.post('/api/comment/add/file', formData,
-        {
-          headers: {"Content-Type": "multipart/form-data"},
-        });
+    const response = await http.post('/api/comment/add/file', formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
 
-    if (response.ok) {
+    // 如果上传成功，显示成功消息
+    if (response.status === 200) {
       ElMessage.success('文件上传成功');
+
+      // 清空输入框和选中的文件
+      selectedFile = null;
+      selectedDocumentId.value = null;
+      selectedVersion.value = ''; // 如果有版本选择框，清空它
     } else {
       ElMessage.error('文件上传失败');
     }
@@ -335,6 +329,7 @@ const handleUploadClick = async () => {
 };
 
 
+
 const handleFileSuccess = (response, file, fileList) => {
   ElMessage.success('文件上传成功');
 };
@@ -343,77 +338,87 @@ const handleFileError = (error, file, fileList) => {
   ElMessage.error('文件上传失败');
 };
 
-import { reactive } from 'vue';
+const userList = ref([]); // 可选用户列表
+const currentAssignees = ref([]); // 当前参与用户
+const selectedUserId = ref(null); // 选择的新用户ID
 
-const allUsers = ref([]); // 所有用户列表
-const taskAssignees = task.value.assignees;
-const selectedAssignees = reactive([]); // 当前已选择的参与人员
-const selectedUser = ref(null); // 临时存储当前选择的用户
-
-// 获取所有用户
-const fetchAllUsers = async () => {
+// 获取用户列表
+const fetchUserList = async () => {
   try {
-    const response = await http.get('/api/user/all');
-    allUsers.value = response.data;
+    const response = await http.get('http://localhost:8081/api/user/all');
+    userList.value = response.data;
   } catch (error) {
-    console.error('获取用户列表失败', error);
     ElMessage.error('获取用户列表失败');
   }
 };
 
-// 添加参与者
-const addAssignee = async (user) => {
-  if (taskAssignees.value.some((assignee) => assignee.id === user.id)) {
-    ElMessage.warning('该用户已是参与者');
+// 更新当前参与用户
+const fetchCurrentAssignees = async () => {
+  try {
+    const response = await http.get(`http://localhost:8081/api/task/getbyid?id=${taskId}`);
+    const assigneesId = response.data.assigneesId;
+    currentAssignees.value = userList.value.filter(user => assigneesId.includes(user.id));
+  } catch (error) {
+    console.error("获取当前参与用户失败:", error);
+    ElMessage.error("获取当前参与用户失败");
+  }
+};
+
+// 添加参与用户
+const addAssignee = async () => {
+  if (!selectedUserId.value) {
+    ElMessage.warning('请选择一个用户');
     return;
   }
 
-  taskAssignees.value.push(user);
-
   try {
-    await updateTaskAssignees();
-    ElMessage.success('参与者添加成功');
+    const newAssignee = userList.value.find(user => user.id === selectedUserId.value);
+
+    if (!newAssignee) {
+      ElMessage.error('无效的用户');
+      return;
+    }
+
+    // 更新任务参与用户
+    // task.value.assignees.push({ id: newAssignee.id });
+
+    const requestData = {
+      id: task.value.id,
+      title: task.value.title,
+      description: task.value.description,
+      startDate: task.value.startDate,
+      endDate: task.value.endDate,
+      belongedProject: { id: task.value.projectId },
+      publisher: { id: task.value.publisher.id },
+      assignees: [
+        {
+          "id": newAssignee.id
+        }
+      ],
+      isCompleted: task.value.isCompleted,
+      percentCompleted: task.value.percentCompleted
+    };
+
+    await http.post('/api/task/modify', requestData);
+
+    // 更新当前参与用户列表
+    currentAssignees.value.push(newAssignee);
+    ElMessage.success('用户添加成功');
+    selectedUserId.value = null; // 清空选择
   } catch (error) {
-    console.error('添加参与者时发生错误:', error);
-    ElMessage.error('参与者添加失败');
+    ElMessage.error('添加用户失败');
   }
 };
 
-// 移除参与者
-const removeAssignee = async (user) => {
-  const index = taskAssignees.value.findIndex((assignee) => assignee.id === user.id);
-  if (index === -1) {
-    ElMessage.warning('该用户不是参与者');
-    return;
-  }
-
-  taskAssignees.value.splice(index, 1);
-
-  try {
-    await updateTaskAssignees();
-    ElMessage.success('参与者移除成功');
-  } catch (error) {
-    console.error('移除参与者时发生错误:', error);
-    ElMessage.error('参与者移除失败');
-  }
-};
-
-// 更新任务的参与者信息
-const updateTaskAssignees = async () => {
-  const requestData = {
-    assignees: taskAssignees.value.map((assignee) => ({ id: assignee.id })),
-  };
-  console.log(requestData);
-  await http.post('http://localhost:8081/api/task/modify', requestData);
-};
 
 // 页面加载时初始化任务信息和评论
 onMounted(() => {
   fetchComments(taskId);  // 获取评论
-  fetchAllUsers();   // 获取任务参与者
   fetchTaskDetail(taskId);  // 获取任务详情
+  fetchUserList();
+  fetchCurrentAssignees();
   fetchComments(taskId);  // 获取评论
-
+  fetchCurrentAssignees();
 });
 </script>
 
