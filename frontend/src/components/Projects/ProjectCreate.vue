@@ -148,13 +148,6 @@ const rules = {
 
       <!-- 负责人 -->
       <el-form-item label="负责人" prop="managerID">
-        <!--        <el-input-->
-        <!--            v-model="searchQuery"-->
-        <!--            fliterable-->
-        <!--            remote-->
-        <!--            placeholder="搜索负责人..."-->
-        <!--            @input="managers"-->
-        <!--        />-->
         <el-select
             v-model="form.managerID"
             filterable

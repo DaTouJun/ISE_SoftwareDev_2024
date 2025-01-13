@@ -113,7 +113,13 @@
     <el-form>
       <!-- 选择用户 -->
       <el-form-item label="选择用户">
-        <el-select v-model="selectedUser" placeholder="请选择用户">
+        <el-select v-model="selectedUser"
+                   filterable
+                   remote
+                   reserve-keyword
+                   placeholder="请选择用户"
+                   :remote-method="searchUsers"
+        >
           <el-option
               v-for="user in userList"
               :key="user.id"
@@ -237,7 +243,7 @@ const markAsRead = async (messageId) => {
 
 // 发送邮件功能
 const showSendDialog = ref(false)
-const userList = reactive([])
+const userList = ref([])
 const selectedUser = ref(null)
 const emailContent = ref('')
 
@@ -245,9 +251,26 @@ const emailContent = ref('')
 const fetchUsers = async () => {
   try {
     const response = await http.get('http://localhost:8081/api/user/all')
-    userList.splice(0, userList.length, ...response.data)
+    // userList.splice(0, userList.length, ...response.data)
+    userList.value = response.data;
   } catch (error) {
     console.error('获取用户列表失败:', error)
+  }
+}
+
+const searchUsers = (query) => {
+  if (!query) {
+    fetchUsers();
+    return;
+  }
+  try {
+    http.post("/api/user/search",
+        {username: query}).then(({data}) => {
+      userList.value = data || [];
+    });
+  } catch (error) {
+    showError("Failed to fetch managers:", error);
+    console.log(error)
   }
 }
 

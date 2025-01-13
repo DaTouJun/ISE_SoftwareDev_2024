@@ -65,17 +65,6 @@ const toggleLR = (formType) => {
       <div>
         <h1>注册与登录</h1>
       </div>
-
-      <!-- 登录 / 注册选择 -->
-      <div class="button-box">
-        <div class="button-left-space"></div>
-        <button class="button" @click="toggleLR('login')">登录</button>
-        <div class="button-middle-space"></div>
-        <button class="button" @click="toggleLR('register')">注册</button>
-        <div class="button-right-space"></div>
-      </div>
-
-
       <div v-if="isLogin" class="login-box">
         <div class="input-container">
           <label for="username">用户名:</label>
@@ -101,6 +90,19 @@ const toggleLR = (formType) => {
           <input v-model="email" type="text" class="input-field"/>
         </div>
         <button class="button" @click="register">注册</button>
+      </div>
+
+
+      <!-- 登录 / 注册选择 -->
+      <div class="button-box">
+        <div v-if="!isLogin">
+          <div class="button-left-space"></div>
+          <button class="button" @click="toggleLR('login')">我要登录</button>
+        </div>
+        <div v-else>
+          <div class="button-left-space"></div>
+          <button class="button" @click="toggleLR('register')">我要注册</button>
+        </div>
       </div>
     </div>
   </div>

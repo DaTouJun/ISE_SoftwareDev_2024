@@ -110,28 +110,4 @@ public class ProjectController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
-//    @PostMapping("/search")//通过项目名称来查看具体项目信息
-//    public ResponseEntity<?> searchProjectByName(@RequestBody String name) {
-//        if (name == null || name.isEmpty()) {
-//            return ResponseEntity.ok(projectService.getAll());  // 为空则返回全部结果
-//        } else {
-//            List<Project> list = projectService.searchProject(name);
-//            return ResponseEntity.ok(list);
-//        }
-//    }
-
-//    @GetMapping("/get")
-//    public ResponseEntity<?> getProjectById(@RequestBody Long id) {
-//        User cuser = securityConfig.getCurrentUser();
-//        Project project = projectService.getProject(id);
-//        if (project == null) {
-//            return ResponseEntity.notFound().build();
-//        }
-//        // 进行鉴权？
-//        if (!project.getParticipants().contains(cuser)) {
-//            return ResponseEntity.status(403).build();
-//        }
-//        return ResponseEntity.ok(project);
-//    }
 }
