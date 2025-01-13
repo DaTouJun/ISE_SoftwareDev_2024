@@ -26,8 +26,7 @@ public class ProcessService {
         }
         Long countAll = taskRepository.countAllTasksByProjectId(project.getId());
         Long countFinished = taskRepository.countCompletedTasksByProjectId(project.getId());
-        double process = (double) (countAll - countFinished) / countAll;
-        System.err.println("process is : " + process);
+        double process = (double) countFinished / countAll;
         project.setProgress(process);
         projectRepository.save(project);
     }

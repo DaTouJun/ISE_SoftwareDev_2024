@@ -9,7 +9,7 @@
       <p><strong>结束日期：</strong>{{ project.endDate }}</p>
       <p><strong>优先级：</strong>{{ project.priority }}</p>
       <p><strong>完成状态：</strong>{{ project.isCompleted ? "已完成" : "未完成" }}</p>
-      <p><strong>进度：</strong>{{ project.progress }}%</p>
+      <p><strong>进度：</strong>{{ (project.progress * 100).toFixed(2) }}%</p>
       <p><strong>负责人:</strong>{{ project.manager?.username }}</p>
       <button @click="isEditing = true">编辑信息</button>
     </div>
@@ -100,7 +100,6 @@
 
 <script setup>
 import {ref, onMounted, inject} from "vue";
-import axios from "axios";
 import {useRoute} from "vue-router";
 import http from "@/http/request.js";
 import TaskOfProjectList from "@/components/Task/TaskOfProjectList.vue";

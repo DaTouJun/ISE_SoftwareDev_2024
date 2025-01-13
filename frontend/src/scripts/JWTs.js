@@ -8,8 +8,8 @@ export const saveTokens = (tokens) => {
     localStorage.setItem('refresh_token', tokens.refresh_token);
 };
 
-const saveAccessToken = (accessToken) => {
-    localStorage.setItem('access_token', accessToken);
+const saveAccessToken = (tokens) => {
+    localStorage.setItem('access_token', tokens.access_token);
 }
 
 export const getAccessToken = () => {
@@ -35,6 +35,7 @@ export const refreshAccessToken = async () => {
             await axios.post('/api/auth/refresh',
                 {refresh_token: refreshToken});
         saveAccessToken(response.data);
+        return response.data;
     } catch (error) {
         if (error.response && error.response.status === 401) {
             clearTokens();
@@ -46,8 +47,13 @@ export const refreshAccessToken = async () => {
 }
 
 export const getPermissions = () => {
+    const token = localStorage.getItem('access_token');
+    if (!token || typeof token !== 'string') {
+        console.error("无效的 access_token:", token);
+        return [];
+    }
     try {
-        const decoded = jwtDecode(localStorage.getItem('access_token'));
+        const decoded = jwtDecode(token);
         return decoded.permissions || [];
     } catch (error) {
         console.error("解析 JWT 失败:", error);
