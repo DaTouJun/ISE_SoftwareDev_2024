@@ -85,7 +85,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <el-table :data="projects" border style="width: 100%" class-name="proj-table">
+  <el-table :data="projects" border style="width: 100%" class="proj-table">
     <el-table-column fixed prop="projectName" label="项目名称" width="200">
       <template #default="scope">
         <el-tooltip class="item" effect="dark" :content="scope.row.projectName" placement="top">
@@ -112,7 +112,11 @@ onMounted(async () => {
         <span>{{ row.isCompleted ? '是' : '否' }}</span>
       </template>
     </el-table-column>
-    <el-table-column prop="progress" label="进度" width="120"/>
+    <el-table-column prop="progress" label="进度" width="120">
+      <template #default="{ row }">
+        <span>{{ (row.progress * 100).toFixed(2) }}%</span>
+      </template>
+    </el-table-column>
     <el-table-column fixed="right" label="进入项目" min-width="120">
       <template #header>
         <el-input v-model="search" size="small"
@@ -152,7 +156,7 @@ onMounted(async () => {
 }
 
 .proj-table {
-  border: 1px solid #ddd;
+  border: 3px solid #ddd;
   border-radius: 2px;
 }
 </style>

@@ -18,7 +18,6 @@ public class JwtTokenProvider {
     private final SecretKey secretRefreshKey = Keys.hmacShaKeyFor(jwtRefreshTokenSecret.getBytes());
 
     public String generateAccessToken(String username, List<String> permissions) {
-        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
         // 15分钟
         long accessTokenExpirationMs = 15 * 60 * 1000;
         return Jwts.builder()

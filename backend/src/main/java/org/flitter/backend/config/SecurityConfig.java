@@ -59,10 +59,8 @@ public class SecurityConfig {
                 corsConfigurationSource()
         ));
 
-        http.exceptionHandling(ex -> {
-            ex.accessDeniedHandler(customAccessDeniedHandler)
-                    .authenticationEntryPoint(customAuthenticationEntryPoint);
-        });
+        http.exceptionHandling(ex -> ex.accessDeniedHandler(customAccessDeniedHandler)
+                .authenticationEntryPoint(customAuthenticationEntryPoint));
 
         // 配置访问
         http.authorizeHttpRequests(auth ->
@@ -74,9 +72,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/role/update").hasAuthority("user:role")
                         .anyRequest().authenticated());
 
-        http.sessionManagement(session -> {
-            session.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-        });
+        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         http.addFilter(new JwtAuthenticationFilter(
                 authenticationManager, jwtTokenProvider));
 
@@ -128,22 +124,22 @@ public class SecurityConfig {
 
                 @Override
                 public boolean isAccountNonExpired() {
-                    return true;
+                    return UserDetails.super.isAccountNonExpired();
                 }
 
                 @Override
                 public boolean isAccountNonLocked() {
-                    return true;
+                    return UserDetails.super.isAccountNonLocked();
                 }
 
                 @Override
                 public boolean isCredentialsNonExpired() {
-                    return true;
+                    return UserDetails.super.isCredentialsNonExpired();
                 }
 
                 @Override
                 public boolean isEnabled() {
-                    return true;
+                    return UserDetails.super.isEnabled();
                 }
             };
         };
@@ -165,7 +161,6 @@ public class SecurityConfig {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated()) {
             String username = auth.getName();
-            System.err.println(username);
             return userRepository.findByUsername(username);
         }
         return null;
