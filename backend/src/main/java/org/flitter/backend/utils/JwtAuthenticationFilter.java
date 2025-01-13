@@ -22,6 +22,11 @@ public class JwtAuthenticationFilter extends BasicAuthenticationFilter {
                                     HttpServletResponse response,
                                     FilterChain chain)
             throws java.io.IOException, jakarta.servlet.ServletException {
+        if (request.getRequestURI().contains("/api/auth/refresh")) {    // 刷新token的接口跳过access鉴权
+            chain.doFilter(request, response); // 跳过验证
+            return;
+        }
+
         String token = getJwtFromRequest(request);
 
         if (token != null && !token.isEmpty() && jwtTokenProvider.validateToken(token, true, request)) {

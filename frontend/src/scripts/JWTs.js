@@ -1,4 +1,5 @@
 import {eventBus} from "@/scripts/eventBus.js";
+import {jwtDecode} from "jwt-decode";
 import axios from "axios";
 
 
@@ -6,6 +7,10 @@ export const saveTokens = (tokens) => {
     localStorage.setItem('access_token', tokens.access_token);
     localStorage.setItem('refresh_token', tokens.refresh_token);
 };
+
+const saveAccessToken = (accessToken) => {
+    localStorage.setItem('access_token', accessToken);
+}
 
 export const getAccessToken = () => {
     return localStorage.getItem('access_token');
@@ -29,7 +34,7 @@ export const refreshAccessToken = async () => {
         const response =
             await axios.post('/api/auth/refresh',
                 {refresh_token: refreshToken});
-        saveTokens(response.data);
+        saveAccessToken(response.data);
     } catch (error) {
         if (error.response && error.response.status === 401) {
             clearTokens();
@@ -39,3 +44,13 @@ export const refreshAccessToken = async () => {
             throw new Error('Failed to refresh access token');
     }
 }
+
+export const getPermissions = () => {
+    try {
+        const decoded = jwtDecode(localStorage.getItem('access_token'));
+        return decoded.permissions || [];
+    } catch (error) {
+        console.error("解析 JWT 失败:", error);
+        return [];
+    }
+};

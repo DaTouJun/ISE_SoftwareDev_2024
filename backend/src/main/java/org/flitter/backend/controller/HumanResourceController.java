@@ -5,9 +5,8 @@ import org.flitter.backend.dto.UserSearchRequestDTO;
 import org.flitter.backend.service.HumanResourceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("/api/user")
@@ -23,6 +22,7 @@ public class HumanResourceController {
     public ResponseEntity<?> findAll() {
         return ResponseEntity.ok(humanresourceService.fetchAllUsersIdNameWithLimit1000());
     }
+
     @PostMapping("/search")
     public ResponseEntity<?> findByName(@RequestBody UserSearchRequestDTO usdto) {
         if (usdto.getUsername() == null || usdto.getUsername().isEmpty()) {
@@ -43,25 +43,33 @@ public class HumanResourceController {
         }
     }
 
-    
-//    @GetMapping("/role/all")
-//    public ResponseEntity<?> allPriority() {
-//        return ResponseEntity.ok(humanresourceService.fetchAllUsersIdRoleWithLimit1000());
-//    }
-//
-//    @PostMapping("/role/update")
-//    public ResponseEntity<?> updatePriority(@RequestBody UserIDRoleDTO updateRequest) {
-//        if (updateRequest.getId() == null) {
-//            return ResponseEntity.badRequest().body("更新id不能为空");
-//        }
-//        if (updateRequest.getRole().toString() == null) {
-//            return ResponseEntity.badRequest().body("更新权限不能为空");
-//        }
-//        try {
-//            humanresourceService.updateRole(updateRequest);
-//        } catch (IllegalArgumentException e) {
-//            return ResponseEntity.badRequest().body(e.getMessage());
-//        }
-//        return (ResponseEntity<?>) ResponseEntity.ok();
-//    }
+    @GetMapping("/role/all")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<?> allUserRole(@RequestParam int page, @RequestParam int size) {
+        return ResponseEntity.ok(humanresourceService.fetchAllUsersIdRole(page - 1, size));
+    }
+
+    @GetMapping("/role/search")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<?> searchUserRole(@RequestParam int page, @RequestParam int size,
+                                            @RequestParam String username) {
+        return ResponseEntity.ok(humanresourceService.searchUserRole(page - 1, size, username));
+    }
+
+    @PostMapping("/role/update")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<?> updateRole(@RequestParam Long userId, @RequestParam Long roleId) {
+        try {
+            humanresourceService.updateUserRole(userId, roleId);
+            return ResponseEntity.ok("角色更新成功");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("更新失败: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/role/available")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<?> availableRole() {
+        return ResponseEntity.ok(humanresourceService.fetchAllRoles());
+    }
 }

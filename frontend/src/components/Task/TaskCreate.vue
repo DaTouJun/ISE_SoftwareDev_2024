@@ -47,6 +47,21 @@ const fetchUsers = async () => {
   }
 };
 
+const searchUsers = (query) => {
+  if (!query) {
+    fetchUsers();
+    return;
+  }
+  try {
+    http.post("/api/user/search",
+        {username: query}).then(({data}) => {
+      users.value = data || [];
+    });
+  } catch (error) {
+    showError("Failed to fetch managers:", error);
+  }
+}
+
 // 创建任务
 const createTask = async () => {
   if (!taskTitle.value || !taskDescription.value  || !taskStartDate.value || !taskEndDate.value || !selectedProjectId.value) {
@@ -75,6 +90,7 @@ const createTask = async () => {
     ElMessage.error('创建任务失败');
   }
 };
+
 
 onMounted(() => {
   fetchUsers();  // 页面加载时获取成员列表
@@ -106,7 +122,7 @@ onMounted(() => {
 
     <!-- 选择项目 -->
     <el-form-item label="选择项目">
-      <el-select v-model="selectedProjectId" placeholder="选择所属项目">
+      <el-select v-model="selectedProjectId" placeholder="选择你所属的项目">
         <el-option
             v-for="project in projects"
             :key="project.id"
@@ -118,7 +134,11 @@ onMounted(() => {
 
     <!-- 选择任务分配成员 -->
     <el-form-item label="选择成员">
-      <el-select v-model="assignedMembers" multiple placeholder="选择任务分配成员">
+      <el-select
+          v-model="assignedMembers"
+          multiple
+          placeholder="选择任务分配成员"
+      >
         <el-option
             v-for="user in users"
             :key="user.id"

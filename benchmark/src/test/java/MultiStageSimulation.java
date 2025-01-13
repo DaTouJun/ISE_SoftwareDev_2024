@@ -43,7 +43,7 @@ public class MultiStageSimulation extends Simulation {
             FileWriter writer = new FileWriter("src\\test\\resources\\" + CSV_FILE_PATH);
             // 添加 CSV 表头
             writer.append("username,password,email\n");
-            for (int i = 0; i < 1200; i++) { // 1200个用户
+            for (int i = 0; i < 3000; i++) { // 3000个测试用户
                 String username = "user_" + UUID.randomUUID();
                 String password = "password_" + UUID.randomUUID();
                 String email = username + "@example.com";
@@ -110,17 +110,17 @@ public class MultiStageSimulation extends Simulation {
     {
         // stage1
 //        ensureCsvIsPopulated(); // 生成的用户名和密码
-        // 配置场景，支持单独运行
+        // 单独运行每个阶段
         setUp(  // 建议先运行注册，然后去运行登录和请求测试
                 // stage2
-//                registerUsers.injectOpen(
-//                        atOnceUsers(1200)
-//                ).protocols(httpProtocol)
-                // stage3
-                loginAndRequest.injectOpen(
-                        rampUsersPerSec(0).to(100).during(30), // 1 分钟加压阶段
-                        rampUsersPerSec(100).to(0).during(30)  // 1 分钟减压阶段
+                registerUsers.injectOpen(
+                       rampUsersPerSec(100).to(100).during(30)
                 ).protocols(httpProtocol)
+                // stage3
+//                loginAndRequest.injectOpen(
+//                        rampUsersPerSec(0).to(100).during(30), // 1 分钟加压阶段
+//                        rampUsersPerSec(100).to(0).during(30)  // 1 分钟减压阶段
+//                ).protocols(httpProtocol)
         );
     }
 }

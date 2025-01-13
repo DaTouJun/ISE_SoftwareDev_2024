@@ -34,7 +34,6 @@ public class TaskController {
     }
 
     //分配任务，也即创建任务
-
     @PostMapping("/allocation")
     public ResponseEntity<?> allocation(@RequestBody TaskAssigneeDTO taskAssigneeDTO) {
         if (taskAssigneeDTO.getTitle() == null || taskAssigneeDTO.getTitle().isEmpty() ||

@@ -11,7 +11,7 @@ import java.util.Set;
 public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
 
     private String name;
 
@@ -22,4 +22,17 @@ public class Role {
     @Enumerated(EnumType.STRING)
     @Column(name="permission")
     private Set<Permission> permissions;
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;  // 使用id计算hashCode
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;  // 如果引用相同返回true
+        if (obj == null || getClass() != obj.getClass()) return false;  // 类型检查
+        Role role = (Role) obj;
+        return id != null && id.equals(role.id);
+    }
 }
