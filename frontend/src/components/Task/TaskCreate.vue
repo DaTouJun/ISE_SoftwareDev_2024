@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
+import http from '@/http/request.js';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 
@@ -19,7 +19,7 @@ const projects = ref([]);
 
 const fetchProjects = async () => {
   try {
-    const response = await axios.get('http://localhost:8081/api/project/list/participated');
+    const response = await http.get('http://localhost:8081/api/project/list/participated');
     console.log(response.data); // 打印数据
     projects.value = response.data.map(project => ({
       id: project.id,
@@ -35,16 +35,32 @@ const fetchProjects = async () => {
 // 获取用户列表
 const fetchUsers = async () => {
   try {
-    const response = await axios.get('http://localhost:8081/api/user/all');
+    const response = await http.get('http://localhost:8081/api/user/all');
     // 映射数据，确保有成员的 id 和 username 属性
     users.value = response.data.map(user => ({
       id: user.id,
       username: user.username  // 映射为 name
     }));
+
   } catch (error) {
     ElMessage.error('获取成员列表失败');
   }
 };
+
+const searchUsers = (query) => {
+  if (!query) {
+    fetchUsers();
+    return;
+  }
+  try {
+    http.post("/api/user/search",
+        {username: query}).then(({data}) => {
+      users.value = data || [];
+    });
+  } catch (error) {
+    showError("Failed to fetch managers:", error);
+  }
+}
 
 // 创建任务
 const createTask = async () => {
@@ -66,15 +82,15 @@ const createTask = async () => {
       id: member,  // 只传递成员的 id
     })),
   };
-
   try {
-    await axios.post('http://localhost:8081/api/task/allocation', requestData);
+    await http.post('http://localhost:8081/api/task/allocation', requestData);
     ElMessage.success('任务创建成功');
     await router.push('/task/list'); // 跳转到任务列表页
   } catch (error) {
     ElMessage.error('创建任务失败');
   }
 };
+
 
 onMounted(() => {
   fetchUsers();  // 页面加载时获取成员列表
@@ -106,7 +122,7 @@ onMounted(() => {
 
     <!-- 选择项目 -->
     <el-form-item label="选择项目">
-      <el-select v-model="selectedProjectId" placeholder="选择所属项目">
+      <el-select v-model="selectedProjectId" placeholder="选择你所属的项目">
         <el-option
             v-for="project in projects"
             :key="project.id"
@@ -118,7 +134,11 @@ onMounted(() => {
 
     <!-- 选择任务分配成员 -->
     <el-form-item label="选择成员">
-      <el-select v-model="assignedMembers" multiple placeholder="选择任务分配成员">
+      <el-select
+          v-model="assignedMembers"
+          multiple
+          placeholder="选择任务分配成员"
+      >
         <el-option
             v-for="user in users"
             :key="user.id"

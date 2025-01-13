@@ -29,22 +29,26 @@ http.interceptors.response.use(
     },
     async (error) => {
         const originalRequest = error.config;
+
         if (!originalRequest) {
             console.error("original request not defined:", error);
             return Promise.reject(error);
         }
 
+
         if (error.response) {
+            console.log(error.response)
             const status = error.response.status;
             if (status === 401 && !originalRequest._retry) {
                 originalRequest._retry = true;
                 try {
-                    const newToken = await refreshAccessToken();
-                    axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+                    const newToken = (await refreshAccessToken()).access_token;
+                    originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+                    http.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
                     return http(originalRequest);
                 } catch (error) {
-                    clearTokens();
                     eventBus.emit("error", "登录过期了");
+                    clearTokens();
                     window.location.href = '/login';
                 }
             } else if (status === 403) {

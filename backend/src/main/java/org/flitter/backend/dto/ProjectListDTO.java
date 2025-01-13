@@ -3,7 +3,6 @@ package org.flitter.backend.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.ToString;
-import org.flitter.backend.entity.User;
 import org.flitter.backend.entity.enums.Priority;
 
 import java.time.LocalDate;

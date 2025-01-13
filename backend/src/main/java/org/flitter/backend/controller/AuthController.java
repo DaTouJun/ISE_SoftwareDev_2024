@@ -68,6 +68,10 @@ public class AuthController {
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(@RequestBody Map<String, String>  refreshRequest) {
         String refreshToken = refreshRequest.get("refresh_token");
+        if (refreshToken == null || refreshToken.isEmpty()) {
+            return ResponseEntity.badRequest().body("refresh_token 不能为空");
+        }
+
         if (!jwtTokenProvider.validateToken(refreshToken, false)) {
             return ResponseEntity.status(401).body("无效的refresh_token");
         }

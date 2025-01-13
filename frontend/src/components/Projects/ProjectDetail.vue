@@ -2,20 +2,21 @@
   <div>
     <!-- 项目详情 -->
     <h1>项目详情</h1>
-    <div v-if="!isEditing">
+    <div v-if="!isEditing" class="project-info">
       <p><strong>项目名称：</strong>{{ project.projectName }}</p>
       <p><strong>描述：</strong>{{ project.description }}</p>
       <p><strong>开始日期：</strong>{{ project.startDate }}</p>
       <p><strong>结束日期：</strong>{{ project.endDate }}</p>
       <p><strong>优先级：</strong>{{ project.priority }}</p>
       <p><strong>完成状态：</strong>{{ project.isCompleted ? "已完成" : "未完成" }}</p>
-      <p><strong>进度：</strong>{{ project.progress }}%</p>
+      <p><strong>进度：</strong>{{ (project.progress * 100).toFixed(2) }}%</p>
+      <p><strong>负责人:</strong>{{ project.manager?.username }}</p>
       <button @click="isEditing = true">编辑信息</button>
     </div>
     <div v-else>
       <label>
         项目名称：
-        <input v-model="project.projectName"/>
+        <textarea v-model="project.projectName"/>
       </label>
       <label>
         描述：
@@ -91,16 +92,18 @@
         <el-button type="primary" @click="addParticipants">添加</el-button>
       </el-form>
     </div>
+    <!-- 跳转到项目甘特图页面 -->
+    <button @click="goToGantt">查看甘特图</button>
   </div>
   <TaskOfProjectList :project-id="project.id" />
 </template>
 
 <script setup>
 import {ref, onMounted, inject} from "vue";
-import axios from "axios";
 import {useRoute} from "vue-router";
 import http from "@/http/request.js";
 import TaskOfProjectList from "@/components/Task/TaskOfProjectList.vue";
+import router from "@/router/index.js";
 
 const showError = inject("showError");
 const showMessage = inject("showMessage");
@@ -167,7 +170,7 @@ const addParticipants = async () => {
   }
 
   try {
-    await axios.post("http://localhost:8081/api/project/add-participant", {
+    await http.post("http://localhost:8081/api/project/add-participant", {
       projectId: projectId,
       userIds: selectedCandidates.value, // 发送选中的用户 ID 列表
     });
@@ -208,9 +211,39 @@ const saveProject = async () => {
   }
 };
 
+// 跳转到项目甘特图页面
+const goToGantt = () => {
+  router.push({ name: "ProjectGantt", params: { id: projectId } });
+};
 
 onMounted(() => {
   fetchProjectDetails();
   fetchCandidates();
 });
 </script>
+
+<style scoped>
+
+.project-info p{
+  font-size: 14px;
+  margin: 10px 0;
+  line-height: 1.5;
+}
+
+input[type="text"],
+input[type="date"],
+input[type="number"],
+textarea,
+select {
+  width: 100%;
+  padding: 10px;
+  margin: 5px 0 20px 0;
+  display: block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 14px;
+  resize: vertical;
+}
+
+</style>

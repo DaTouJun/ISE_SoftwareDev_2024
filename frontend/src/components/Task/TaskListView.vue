@@ -20,7 +20,7 @@
 
 <script setup>
 import {ref, onMounted, inject} from 'vue';
-import axios from 'axios';
+import http from "@/http/request.js"
 import {useRouter} from 'vue-router';
 import {ElMessage} from 'element-plus';
 
@@ -30,7 +30,7 @@ const tasks = ref([]);  // 存储任务列表
 // 获取任务列表
 const fetchTasks = async () => {
   try {
-    const response = await axios.get('http://localhost:8081/api/task/getbyworkerid');
+    const response = await http.get('http://localhost:8081/api/task/getbyworkerid');
     tasks.value = response.data; // 将获取的数据赋值给 tasks
   } catch (error) {
     // 显示错误消息
@@ -40,7 +40,7 @@ const fetchTasks = async () => {
 
 // 跳转到任务详情页
 const goToTaskDetail = async (taskId) => {
-  router.push({
+  await router.push({
     // path: `/task/detail/${taskId}`,
     name: "TasksDetail",
     params: {taskId: taskId}

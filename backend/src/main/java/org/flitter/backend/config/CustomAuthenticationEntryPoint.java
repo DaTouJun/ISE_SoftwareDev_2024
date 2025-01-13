@@ -23,7 +23,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
             response.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \""
                     + expiredMessage + "\"}");
         } else {
-            response.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"你没登陆，请登录\"}");
+            response.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"You are not login\"}");
         }
     }
 }

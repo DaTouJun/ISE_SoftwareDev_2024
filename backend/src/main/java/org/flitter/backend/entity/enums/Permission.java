@@ -14,7 +14,6 @@ public enum Permission {
 
     ROLE_MODIFY("role:modify"),;
 
-
     private final String permission;
 
     Permission(String s) {

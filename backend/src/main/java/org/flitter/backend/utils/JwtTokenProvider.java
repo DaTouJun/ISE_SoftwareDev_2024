@@ -18,7 +18,6 @@ public class JwtTokenProvider {
     private final SecretKey secretRefreshKey = Keys.hmacShaKeyFor(jwtRefreshTokenSecret.getBytes());
 
     public String generateAccessToken(String username, List<String> permissions) {
-        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
         // 15分钟
         long accessTokenExpirationMs = 15 * 60 * 1000;
         return Jwts.builder()
@@ -43,41 +42,40 @@ public class JwtTokenProvider {
 
     public String getUsernameFromJwt(String token, boolean isAccessToken) {
         SecretKey key = isAccessToken ? secretAccessKey : secretRefreshKey;
-        String us = Jwts.parser().verifyWith(key).build()
+        return Jwts.parser().verifyWith(key).build()
                 .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();
-        System.err.println("token get username: " + us);
-        return us;
     }
 
-        // 验证 Token
-        public boolean validateToken(String token, boolean isAccessToken,
-                                     HttpServletRequest request) {
-            try {
-                SecretKey secret = isAccessToken ? secretAccessKey : secretRefreshKey;
-                Jwts.parser().verifyWith(secret).build()
-                        .parseSignedClaims(token);
-                return true;
-            } catch (ExpiredJwtException e) {
-                request.setAttribute("tokenExpired", "AccessToken expired");
-            } catch (SignatureException | MalformedJwtException | UnsupportedJwtException |
-                     IllegalArgumentException ex) {
-                ex.printStackTrace();
-            }
-            return false;
+    // 验证 Token
+    public boolean validateToken(String token, boolean isAccessToken,
+                                 HttpServletRequest request) {
+        try {
+            SecretKey secret = isAccessToken ? secretAccessKey : secretRefreshKey;
+            Jwts.parser().verifyWith(secret).build()
+                    .parseSignedClaims(token);
+            return true;
+        } catch (ExpiredJwtException e) {
+            request.setAttribute("tokenExpired", "AccessToken expired");
+        } catch (SignatureException | MalformedJwtException | UnsupportedJwtException |
+                 IllegalArgumentException ex) {
+            ex.printStackTrace();
         }
-        // 验证 Token
-        public boolean validateToken(String token, boolean isAccessToken) {
-            try {
-                SecretKey secret = isAccessToken ? secretAccessKey : secretRefreshKey;
-                Jwts.parser().verifyWith(secret).build()
-                        .parseSignedClaims(token);
-                return true;
-            } catch (SignatureException | ExpiredJwtException | MalformedJwtException | UnsupportedJwtException |
-                     IllegalArgumentException ex) {
-                ex.printStackTrace();
-            }
-            return false;
+        return false;
+    }
+
+    // 验证 Token
+    public boolean validateToken(String token, boolean isAccessToken) {
+        try {
+            SecretKey secret = isAccessToken ? secretAccessKey : secretRefreshKey;
+            Jwts.parser().verifyWith(secret).build()
+                    .parseSignedClaims(token);
+            return true;
+        } catch (SignatureException | ExpiredJwtException | MalformedJwtException | UnsupportedJwtException |
+                 IllegalArgumentException ex) {
+            ex.printStackTrace();
         }
+        return false;
+    }
 }

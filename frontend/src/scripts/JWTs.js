@@ -1,12 +1,16 @@
-import http from "@/http/request.js";
-import {inject} from "vue";
 import {eventBus} from "@/scripts/eventBus.js";
+import {jwtDecode} from "jwt-decode";
+import axios from "axios";
 
 
 export const saveTokens = (tokens) => {
     localStorage.setItem('access_token', tokens.access_token);
     localStorage.setItem('refresh_token', tokens.refresh_token);
 };
+
+const saveAccessToken = (tokens) => {
+    localStorage.setItem('access_token', tokens.access_token);
+}
 
 export const getAccessToken = () => {
     return localStorage.getItem('access_token');
@@ -28,9 +32,10 @@ export const refreshAccessToken = async () => {
     }
     try {
         const response =
-            await http.post('/api/auth/refresh',
+            await axios.post('/api/auth/refresh',
                 {refresh_token: refreshToken});
-        saveTokens(response.data);
+        saveAccessToken(response.data);
+        return response.data;
     } catch (error) {
         if (error.response && error.response.status === 401) {
             clearTokens();
@@ -40,3 +45,18 @@ export const refreshAccessToken = async () => {
             throw new Error('Failed to refresh access token');
     }
 }
+
+export const getPermissions = () => {
+    const token = localStorage.getItem('access_token');
+    if (!token || typeof token !== 'string') {
+        console.error("无效的 access_token:", token);
+        return [];
+    }
+    try {
+        const decoded = jwtDecode(token);
+        return decoded.permissions || [];
+    } catch (error) {
+        console.error("解析 JWT 失败:", error);
+        return [];
+    }
+};

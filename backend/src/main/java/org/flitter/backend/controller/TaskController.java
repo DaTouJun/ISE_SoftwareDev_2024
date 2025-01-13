@@ -12,7 +12,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.flitter.backend.dto.TaskAssigneeDTO;
+
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
+import org.hibernate.Hibernate;
+import org.springframework.transaction.annotation.Transactional;
 
 @RestController
 @RequestMapping("/api/task")
@@ -28,7 +34,6 @@ public class TaskController {
     }
 
     //分配任务，也即创建任务
-
     @PostMapping("/allocation")
     public ResponseEntity<?> allocation(@RequestBody TaskAssigneeDTO taskAssigneeDTO) {
         if (taskAssigneeDTO.getTitle() == null || taskAssigneeDTO.getTitle().isEmpty() ||
@@ -106,6 +111,7 @@ public class TaskController {
 
 
     //通过任务id来查询任务
+    @Transactional
     @GetMapping("/getbyid")
     public ResponseEntity<?> getById(@RequestParam Long id) {
         User user = SecurityConfig.getCurrentUser();
@@ -128,6 +134,12 @@ public class TaskController {
         taskAssigneeDTO.setTitle(task.getTitle());
         taskAssigneeDTO.setDescription(task.getDescription());
         //taskAssigneeDTO.setAssignees(task.getAssignees());
+        Set<User> assignees = task.getAssignees();
+        List<Long> assigneesIds = new ArrayList<>();
+        for (User users : assignees) {
+            assigneesIds.add(users.getId());  // 获取 User 的 ID 并加入 List
+        }
+        taskAssigneeDTO.setAssigneesId(assigneesIds);
         taskAssigneeDTO.setProjectId(task.getBelongedProject().getId());
         taskAssigneeDTO.setStartDate(task.getStartDate());
         taskAssigneeDTO.setEndDate(task.getEndDate());
@@ -137,7 +149,7 @@ public class TaskController {
         return ResponseEntity.ok(taskAssigneeDTO);//若没问题，咋返回该任务。
     }
 
-    @GetMapping("/getbyworkerid")//通过员工id查找其所参与的项目
+    @GetMapping("/getbyworkerid")//查询当前用户参与的项目
     public ResponseEntity<?> getByWorkerid() {
         User user = SecurityConfig.getCurrentUser();
         List<Task> tasks;

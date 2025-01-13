@@ -59,24 +59,20 @@ public class SecurityConfig {
                 corsConfigurationSource()
         ));
 
-        http.exceptionHandling(ex -> {
-            ex.accessDeniedHandler(customAccessDeniedHandler)
-                    .authenticationEntryPoint(customAuthenticationEntryPoint);
-        });
+        http.exceptionHandling(ex -> ex.accessDeniedHandler(customAccessDeniedHandler)
+                .authenticationEntryPoint(customAuthenticationEntryPoint));
 
         // 配置访问
         http.authorizeHttpRequests(auth ->
                 auth.requestMatchers("/api/auth/**").permitAll()    // 开启登录
                         .requestMatchers("/api/project/**").authenticated() // 仅用户角色可访问项目接口
                         .requestMatchers("/api/user/**").authenticated()
-                        .requestMatchers("/api/project/create").hasAuthority("project:create")
-                        .requestMatchers("/api/projects/**").hasAuthority("project:read")
-                        .requestMatchers("/api/users/role/update").hasAuthority("user:read")
+                        .requestMatchers("/api/project/create").authenticated()
+                        .requestMatchers("/api/projects/**").authenticated()
+                        .requestMatchers("/api/users/role/update").hasAuthority("user:role")
                         .anyRequest().authenticated());
 
-        http.sessionManagement(session -> {
-            session.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-        });
+        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         http.addFilter(new JwtAuthenticationFilter(
                 authenticationManager, jwtTokenProvider));
 
@@ -128,22 +124,22 @@ public class SecurityConfig {
 
                 @Override
                 public boolean isAccountNonExpired() {
-                    return true;
+                    return UserDetails.super.isAccountNonExpired();
                 }
 
                 @Override
                 public boolean isAccountNonLocked() {
-                    return true;
+                    return UserDetails.super.isAccountNonLocked();
                 }
 
                 @Override
                 public boolean isCredentialsNonExpired() {
-                    return true;
+                    return UserDetails.super.isCredentialsNonExpired();
                 }
 
                 @Override
                 public boolean isEnabled() {
-                    return true;
+                    return UserDetails.super.isEnabled();
                 }
             };
         };
@@ -165,7 +161,6 @@ public class SecurityConfig {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated()) {
             String username = auth.getName();
-            System.err.println(username);
             return userRepository.findByUsername(username);
         }
         return null;

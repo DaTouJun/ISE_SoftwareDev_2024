@@ -3,7 +3,6 @@
   <el-table :data="tasks" style="width: 100%">
     <el-table-column prop="title" label="任务名称" width="180"></el-table-column>
     <el-table-column prop="description" label="任务描述" width="300"></el-table-column>
-    <el-table-column prop="priority" label="优先级" width="100"></el-table-column>
     <el-table-column prop="startDate" label="开始时间" width="150"></el-table-column>
     <el-table-column prop="endDate" label="结束时间" width="150"></el-table-column>
 

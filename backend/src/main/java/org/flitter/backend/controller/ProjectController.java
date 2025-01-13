@@ -9,6 +9,7 @@ import org.flitter.backend.entity.enums.Priority;
 import org.flitter.backend.service.ProjectService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -52,8 +53,13 @@ public class ProjectController {
     }
 
     @GetMapping("/list/all")// 看到所有的项目列表
-    public ResponseEntity<?> getProjectList() {
-        return ResponseEntity.ok(projectService.getAllProjects());
+    public ResponseEntity<?> getProjectList(@RequestParam int page, @RequestParam int size) {
+        return ResponseEntity.ok(projectService.getAllProjects(PageRequest.of(page - 1, size)));
+    }
+
+    @GetMapping("/list/search")
+    public ResponseEntity<?> getProjectListSearch(@RequestParam String name, @RequestParam int page, @RequestParam int size) {
+        return ResponseEntity.ok(projectService.getProjectsLike(name, PageRequest.of(page - 1, size)));
     }
 
     @GetMapping("/list/participated")
@@ -104,28 +110,4 @@ public class ProjectController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
-//    @PostMapping("/search")//通过项目名称来查看具体项目信息
-//    public ResponseEntity<?> searchProjectByName(@RequestBody String name) {
-//        if (name == null || name.isEmpty()) {
-//            return ResponseEntity.ok(projectService.getAll());  // 为空则返回全部结果
-//        } else {
-//            List<Project> list = projectService.searchProject(name);
-//            return ResponseEntity.ok(list);
-//        }
-//    }
-
-//    @GetMapping("/get")
-//    public ResponseEntity<?> getProjectById(@RequestBody Long id) {
-//        User cuser = securityConfig.getCurrentUser();
-//        Project project = projectService.getProject(id);
-//        if (project == null) {
-//            return ResponseEntity.notFound().build();
-//        }
-//        // 进行鉴权？
-//        if (!project.getParticipants().contains(cuser)) {
-//            return ResponseEntity.status(403).build();
-//        }
-//        return ResponseEntity.ok(project);
-//    }
 }

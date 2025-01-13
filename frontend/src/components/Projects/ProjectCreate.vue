@@ -26,10 +26,6 @@ const resetForm = () => {
 const searchQuery = ref("")
 const managers = ref([])
 
-watch(searchQuery, () => {
-  searchManagers();
-})
-
 const fetchManagers = async () => {
   try {
     managers.value = (await http.get("/api/user/all")).data;
@@ -38,14 +34,16 @@ const fetchManagers = async () => {
   }
 };
 
-const searchManagers = async () => {
-  if (!searchQuery.value) {
-    await fetchManagers();
+const searchManagers = (query) => {
+  if (!query) {
+    fetchManagers();
     return;
   }
   try {
-    managers.value = (await http.post("/api/user/search",
-        {username: searchQuery.value})).data;
+    http.post("/api/user/search",
+        {username: query}).then(({data}) => {
+      managers.value = data || [];
+    });
   } catch (error) {
     showError("Failed to fetch managers:", error);
   }
@@ -150,12 +148,14 @@ const rules = {
 
       <!-- 负责人 -->
       <el-form-item label="负责人" prop="managerID">
-        <el-input
-            v-model="searchQuery"
-            placeholder="搜索负责人..."
-            @input="managers"
-        />
-        <el-select v-model="form.managerID" placeholder="请选择负责人">
+        <el-select
+            v-model="form.managerID"
+            filterable
+            remote
+            reserve-keyword
+            placeholder="请输入负责人名称"
+            :remote-method="searchManagers"
+        >
           <el-option
               v-for="manager in managers"
               :key="manager.id"

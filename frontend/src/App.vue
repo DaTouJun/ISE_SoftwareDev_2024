@@ -34,7 +34,6 @@
 import {useRoute} from "vue-router";
 import {provide, computed, reactive, onMounted, defineAsyncComponent} from "vue";
 import {eventBus} from "@/scripts/eventBus.js";
-import {provide, computed, reactive, defineAsyncComponent} from "vue";
 
 const LazyMessageView = defineAsyncComponent(() =>
     import("@/components/Message/Message.vue")
