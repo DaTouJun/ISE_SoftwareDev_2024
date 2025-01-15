@@ -11,6 +11,7 @@ import org.flitter.backend.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,6 +24,7 @@ public class ProjectController {
     }
 
     @PostMapping("/create")
+    @PreAuthorize("hasAuthority('project:create')")
     public ResponseEntity<?> create(@RequestBody ProjectCreateDTO project) {
         if (project.getName() == null || project.getName().isEmpty() ||
                 project.getDescription() == null || project.getDescription().isEmpty()) {

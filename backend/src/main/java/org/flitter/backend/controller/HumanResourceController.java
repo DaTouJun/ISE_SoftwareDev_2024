@@ -44,20 +44,20 @@ public class HumanResourceController {
     }
 
     @GetMapping("/role/all")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('role:modify')")
     public ResponseEntity<?> allUserRole(@RequestParam int page, @RequestParam int size) {
         return ResponseEntity.ok(humanresourceService.fetchAllUsersIdRole(page - 1, size));
     }
 
     @GetMapping("/role/search")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('role:modify')")
     public ResponseEntity<?> searchUserRole(@RequestParam int page, @RequestParam int size,
                                             @RequestParam String username) {
         return ResponseEntity.ok(humanresourceService.searchUserRole(page - 1, size, username));
     }
 
     @PostMapping("/role/update")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('role:modify')")
     public ResponseEntity<?> updateRole(@RequestParam Long userId, @RequestParam Long roleId) {
         try {
             humanresourceService.updateUserRole(userId, roleId);
@@ -68,7 +68,7 @@ public class HumanResourceController {
     }
 
     @GetMapping("/role/available")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('role:modify')")
     public ResponseEntity<?> availableRole() {
         return ResponseEntity.ok(humanresourceService.fetchAllRoles());
     }

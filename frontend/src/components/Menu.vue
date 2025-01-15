@@ -37,7 +37,7 @@ const menuConfig = [
     index: "1",
     children: [
       {title: "项目列表", path: "/project/list", permission: null},
-      {title: "创建项目", path: "/project/create", permission: null},
+      {title: "创建项目", path: "/project/create", permission: "project:create"},
     ],
   },
   {

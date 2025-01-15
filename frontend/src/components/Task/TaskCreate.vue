@@ -8,7 +8,6 @@ const router = useRouter();
 
 const taskTitle = ref('');
 const taskDescription = ref('');
-const taskPriority = ref('');
 const taskStartDate = ref('');
 const taskEndDate = ref('');
 const assignedMembers = ref([]); // 存储选中的任务分配成员
@@ -87,10 +86,9 @@ const createTask = async () => {
     ElMessage.success('任务创建成功');
     await router.push('/task/list'); // 跳转到任务列表页
   } catch (error) {
-    ElMessage.error('创建任务失败');
+    ElMessage.error('创建任务失败' + error.message);
   }
 };
-
 
 onMounted(() => {
   fetchUsers();  // 页面加载时获取成员列表
@@ -137,7 +135,11 @@ onMounted(() => {
       <el-select
           v-model="assignedMembers"
           multiple
+          filterable
+          remote
           placeholder="选择任务分配成员"
+          reserve-keyword
+          :remote-method="searchUsers"
       >
         <el-option
             v-for="user in users"

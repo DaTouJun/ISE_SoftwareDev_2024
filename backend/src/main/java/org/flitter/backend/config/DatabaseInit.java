@@ -1,6 +1,5 @@
 package org.flitter.backend.config;
 
-import com.fasterxml.jackson.core.Base64Variant;
 import org.flitter.backend.entity.Role;
 import org.flitter.backend.entity.User;
 import org.flitter.backend.entity.enums.Permission;
@@ -35,6 +34,19 @@ public class DatabaseInit {
                 role.setPermissions(permissions);
                 roleRepository.save(role);
             }
+            if(roleRepository.findByName("ROLE_PROJECT_MANAGER") == null) {
+                Role role = new Role();
+                role.setName("ROLE_PROJECT_MANAGER");
+                Set<Permission> permissions = new HashSet<>();
+                permissions.add(Permission.fromString("project:create"));
+                permissions.add(Permission.fromString("project:read"));
+                permissions.add(Permission.fromString("project:write"));
+                permissions.add(Permission.fromString("task:create"));
+                permissions.add(Permission.fromString("task:read"));
+                permissions.add(Permission.fromString("task:write"));
+                role.setPermissions(permissions);
+                roleRepository.save(role);
+            }
             if (roleRepository.findByName("ROLE_ADMIN") == null) {
                 Role role = new Role();
                 role.setName("ROLE_ADMIN");
@@ -45,19 +57,6 @@ public class DatabaseInit {
 
                 permissions.add(Permission.fromString("role:modify"));
 
-                permissions.add(Permission.fromString("task:create"));
-                permissions.add(Permission.fromString("task:read"));
-                permissions.add(Permission.fromString("task:write"));
-                role.setPermissions(permissions);
-                roleRepository.save(role);
-            }
-            if(roleRepository.findByName("ROLE_PROJECT_MANAGER") == null) {
-                Role role = new Role();
-                role.setName("ROLE_PROJECT_MANAGER");
-                Set<Permission> permissions = new HashSet<>();
-                permissions.add(Permission.fromString("project:create"));
-                permissions.add(Permission.fromString("project:read"));
-                permissions.add(Permission.fromString("project:write"));
                 permissions.add(Permission.fromString("task:create"));
                 permissions.add(Permission.fromString("task:read"));
                 permissions.add(Permission.fromString("task:write"));

@@ -41,7 +41,11 @@
 
     <!-- 添加参与用户 -->
     <el-divider>添加参与用户</el-divider>
-    <el-select v-model="selectedUserId" placeholder="选择用户">
+    <el-select v-model="selectedUserId"
+               placeholder="选择用户"
+               filterable
+               remote
+               :remote-method="searchUsers">
       <el-option
           v-for="user in userList"
           :key="user.id"
@@ -308,7 +312,7 @@ const handleUploadClick = async () => {
 
   try {
     const response = await http.post('/api/comment/add/file', formData, {
-      headers: { "Content-Type": "multipart/form-data" },
+      headers: {"Content-Type": "multipart/form-data"},
     });
 
     // 如果上传成功，显示成功消息
@@ -328,7 +332,6 @@ const handleUploadClick = async () => {
     ElMessage.error('文件上传失败');
   }
 };
-
 
 
 const handleFileSuccess = (response, file, fileList) => {
@@ -365,6 +368,21 @@ const fetchCurrentAssignees = async () => {
   }
 };
 
+const searchUsers = (query) => {
+  if (!query) {
+    fetchUserList();
+    return;
+  }
+  try {
+    http.post("/api/user/search",
+        {username: query}).then(({data}) => {
+      userList.value = data || [];
+    });
+  } catch (error) {
+    showError("Failed to fetch managers:", error);
+  }
+}
+
 // 添加参与用户
 const addAssignee = async () => {
   if (!selectedUserId.value) {
@@ -389,8 +407,8 @@ const addAssignee = async () => {
       description: task.value.description,
       startDate: task.value.startDate,
       endDate: task.value.endDate,
-      belongedProject: { id: task.value.projectId },
-      publisher: { id: task.value.publisher.id },
+      belongedProject: {id: task.value.projectId},
+      publisher: {id: task.value.publisher.id},
       assignees: [
         {
           "id": newAssignee.id
