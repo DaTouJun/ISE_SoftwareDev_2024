@@ -319,6 +319,7 @@ const handleUploadClick = async () => {
       selectedFile = null;
       selectedDocumentId.value = null;
       selectedVersion.value = ''; // 如果有版本选择框，清空它
+      window.location.reload();  // 刷新页面
     } else {
       ElMessage.error('文件上传失败');
     }
