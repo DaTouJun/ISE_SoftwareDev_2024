@@ -462,10 +462,6 @@ onMounted(() => {
   margin: 5px 0;
 }
 
-.assignee-management {
-  margin-top: 20px;
-}
-
 .assignee-management ul {
   list-style-type: none;
   padding: 0;
