@@ -39,16 +39,13 @@
         </select>
       </label>
       <label>
-        进度：
-        <input type="number" v-model="project.progress" step="0.1" min="0" max="100"/>
-      </label>
-      <label>
         完成状态：
         <select v-model="project.isCompleted">
           <option :value="true">已完成</option>
           <option :value="false">未完成</option>
         </select>
       </label>
+
       <button @click="saveProject">保存</button>
       <button @click="isEditing = false">取消</button>
     </div>
@@ -57,8 +54,9 @@
     <div>
       <h2>已有参与者</h2>
       <ul>
-        <li v-for="participant in participants" :key="participant.id">
+        <li v-for="participant in participants" :key="participant.id" class="par-list-item">
           {{ participant.username }}
+          <button class="par-remove-button" @click="removeParticipant(participant.id)">移除</button>
         </li>
       </ul>
     </div>
@@ -67,19 +65,16 @@
     <div>
       <h2>添加参与者</h2>
       <el-form>
-        <el-form-item label="搜索可添加用户或直接选择">
-          <el-input
-              v-model="searchQuery"
-              placeholder="搜索用户..."
-              @input="searchCandidates"
-          />
-        </el-form-item>
         <el-form-item label="选择用户">
           <el-select
               v-model="selectedCandidates"
+              filterable
               multiple
+              remote
+              reserve-focus
               placeholder="请选择需要添加的用户"
               style="width: 100%;"
+              :remote-method="searchCandidates"
           >
             <el-option
                 v-for="candidate in candidates"
@@ -95,7 +90,7 @@
     <!-- 跳转到项目甘特图页面 -->
     <button @click="goToGantt">查看甘特图</button>
   </div>
-  <TaskOfProjectList :project-id="project.id" />
+  <TaskOfProjectList :project-id="project.id"/>
 </template>
 
 <script setup>
@@ -114,9 +109,9 @@ const projectId = route.params.id;
 const project = ref({});
 const participants = ref({});
 const candidates = ref([]);         // 候选用户列表
-const searchQuery = ref("");        // 搜索关键词
 const selectedCandidates = ref([]);   // 已选择的用户 ID 列表
 const isEditing = ref(false);
+const managers = ref([]);
 
 // 获取项目详情
 const fetchProjectDetails = async () => {
@@ -148,17 +143,41 @@ const fetchCandidates = async () => {
   }
 };
 
-const searchCandidates = async () => {
-  if (!searchQuery.value) {
-    await fetchCandidates();
+const searchCandidates = (query) => {
+  if (!query) {
+    fetchCandidates();
     return;
   }
   try {
-    candidates.value = (await http.post("/api/user/search",
-        {username: searchQuery.value}
-    )).data;
+    candidates.value = http.post("/api/user/search",
+        {username: query}).then(({data}) =>{
+      candidates.value = data || [];
+    });
   } catch (error) {
     showError(error);
+  }
+}
+
+const fetchManagers = async () => {
+  try {
+    managers.value = (await http.get("/api/user/all")).data;
+  } catch (error) {
+    console.error("Failed to fetch managers:", error);
+  }
+};
+
+const searchManagers = (query) => {
+  if (!query) {
+    fetchManagers();
+    return;
+  }
+  try {
+    http.post("/api/user/search",
+        {username: query}).then(({data}) => {
+      managers.value = data || [];
+    });
+  } catch (error) {
+    showError("Failed to fetch managers:", error);
   }
 }
 
@@ -180,6 +199,24 @@ const addParticipants = async () => {
     showError(error);
     console.error("添加参与者失败:", error);
     alert("添加失败，请稍后再试！");
+  }
+};
+
+const removeParticipant = async (userId) => {
+  if (!confirm("确定要移除该参与者吗？")) {
+    return;
+  }
+  try {
+    await http.post("/api/project/delete-participants", {
+      projectId: projectId,
+      userIds: [userId], // 发送需要移除的用户ID
+    });
+    showMessage("移除参与者成功");
+    await fetchProjectDetails(); // 重新加载项目详情
+  } catch (error) {
+    showError(error);
+    console.error("移除参与者失败:", error);
+    alert("移除失败，请稍后再试！");
   }
 };
 
@@ -213,7 +250,7 @@ const saveProject = async () => {
 
 // 跳转到项目甘特图页面
 const goToGantt = () => {
-  router.push({ name: "ProjectGantt", params: { id: projectId } });
+  router.push({name: "ProjectGantt", params: {id: projectId}});
 };
 
 onMounted(() => {
@@ -224,7 +261,7 @@ onMounted(() => {
 
 <style scoped>
 
-.project-info p{
+.project-info p {
   font-size: 14px;
   margin: 10px 0;
   line-height: 1.5;
@@ -244,6 +281,24 @@ select {
   box-sizing: border-box;
   font-size: 14px;
   resize: vertical;
+}
+
+.par-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 0;
+}
+
+.par-remove-button {
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  align-content: center;
 }
 
 </style>

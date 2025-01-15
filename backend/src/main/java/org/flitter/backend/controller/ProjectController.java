@@ -110,4 +110,18 @@ public class ProjectController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @PostMapping("/delete-participants")
+    public ResponseEntity<?> deleteParticipants(@RequestBody ProjectAddParticipantDTO dto) {
+        if (dto.getProjectId() == null || dto.getUserIds() == null || dto.getUserIds().isEmpty()) {
+            return ResponseEntity.badRequest().body("项目ID和用户列表不能为空");
+        }
+
+        try {
+            Project updatedProject = projectService.removeParticipants(dto);
+            return ResponseEntity.ok(updatedProject);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }

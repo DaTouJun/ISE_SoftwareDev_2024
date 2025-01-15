@@ -134,4 +134,26 @@ public class ProjectService {
 
         return projectRepository.save(project);
     }
+
+    @Transactional
+    public Project removeParticipants(ProjectAddParticipantDTO dto) {
+        Project project = projectRepository.findById(dto.getProjectId())
+                .orElseThrow(() -> new IllegalArgumentException("未找到对应的项目"));
+
+        Iterable<User> iterableUsers = userRepository.findAllById(dto.getUserIds());
+        List<User> userList = StreamSupport.stream(iterableUsers.spliterator(), false)
+                .toList();
+        if (userList.isEmpty()) {
+            throw new IllegalArgumentException("未找到对应的用户");
+        }
+
+        for (User user : userList) {
+            if (!project.getParticipants().contains(user)) {
+                throw new IllegalArgumentException("用户不在该项目中: " + user.getId());
+            }
+            project.getParticipants().remove(user);
+        }
+
+        return projectRepository.save(project);
+    }
 }
